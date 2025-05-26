@@ -15,6 +15,7 @@ import { InventorySettings } from './InventorySettings';
 import { Menu, Package, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import { Product } from '../../types';
 import { PageWrapper } from '../layout/PageWrapper';
+import { userService } from '../../services/userService'; // Import userService
 
 type TabType = 'products' | 'stock' | 'warehouse' | 'transfer' | 'alerts' | 'purchases' | 'reports' | 'settings';
 
@@ -50,6 +51,20 @@ export function InventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductFormData | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('products');
+  const [canCreateProducts, setCanCreateProducts] = useState(false); // State for create permission
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        const createPerm = await userService.checkCurrentUserPermission('products:create');
+        setCanCreateProducts(createPerm);
+      } catch (error) {
+        console.error("Error checking product create permission:", error);
+        setCanCreateProducts(false);
+      }
+    };
+    checkPermissions();
+  }, []);
 
   const refreshProducts = async () => {
     try {
@@ -126,7 +141,7 @@ export function InventoryPage() {
           <>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
               <h2 className="text-xl font-semibold text-gray-900">قائمة المنتجات</h2>
-              <NewProductButton onClick={() => setIsFormOpen(true)} />
+              {canCreateProducts && <NewProductButton onClick={() => setIsFormOpen(true)} />}
             </div>
             <ProductList
               products={products}

@@ -1,85 +1,58 @@
 import { BaseService } from './base.service';
 import { Customer } from '../types';
+import { userService } from './userService'; // Import userService
+import { AppError } from '../utils/error-handler'; // Import AppError
 
 class CustomerService extends BaseService {
+  private async checkPermission(permission: string) {
+    const hasPermission = await userService.checkCurrentUserPermission(permission);
+    if (!hasPermission) {
+      throw new AppError(`Unauthorized: Missing permission ${permission}`, '403', 'User does not have the required permission.');
+    }
+  }
+
   async getAll() {
-    try {
-      // First check if we have an active session
-      const { data } = await this.db.auth.getSession();
-      if (!data.session) {
-        console.warn("No active session found. Attempting to refresh...");
-        
-        // Try to refresh the session
-        const { data: refreshData } = await this.db.auth.refreshSession();
-        if (!refreshData.session) {
-          throw new Error("Authentication required. Please log in.");
-        }
-      }
-      
-      const { data: userData, error: userError } = await this.db.auth.getUser();
-      if (userError || !userData.user) {
-        throw new Error("User not authenticated to fetch customers.");
-      }
-      
+    // Optional: Check for 'customers:read' permission
+    // await this.checkPermission('customers:read');
+    return this.executeWithRetry(async () => {
       const { data: customers, error } = await this.db
         .from('customers')
         .select('*');
       
       if (error) {
         console.error("Error fetching customers:", error);
-        throw error;
+        this.handleError(error, 'فشل في تحميل العملاء');
       }
-      
       return customers || [];
-    } catch (error) {
-      return this.handleError(error, 'فشل في تحميل العملاء');
-    }
+    }, 'Failed to fetch customers');
   }
 
   async getById(id: string) {
-    try {
-      // Check for active session
-      const { data } = await this.db.auth.getSession();
-      if (!data.session) {
-        throw new Error("Authentication required. Please log in.");
-      }
-      
-      const { data: userData, error: userError } = await this.db.auth.getUser();
-      if (userError || !userData.user) {
-        throw new Error("User not authenticated to fetch customer details.");
-      }
-      
+    // Optional: Check for 'customers:read' permission
+    // await this.checkPermission('customers:read');
+    return this.executeWithRetry(async () => {
       const { data: customer, error } = await this.db
         .from('customers')
         .select('*')
         .eq('id', id)
         .single();
       
-      if (error) throw error;
+      if (error) this.handleError(error, 'فشل في تحميل بيانات العميل');
       return customer;
-    } catch (error) {
-      return this.handleError(error, 'فشل في تحميل بيانات العميل');
-    }
+    }, 'Failed to fetch customer by ID');
   }
 
-  async create(customer: Omit<Customer, 'id'>) {
-    try {
-      // Check for active session
-      const { data } = await this.db.auth.getSession();
-      if (!data.session) {
-        throw new Error("Authentication required. Please log in.");
+  async create(customer: Omit<Customer, 'id' | 'user_id'>) { // user_id will be added internally
+    await this.checkPermission('customers:create');
+    return this.executeWithRetry(async () => {
+      const user = await this.getAuthenticatedUser();
+      if (!user) {
+        throw new AppError("User not authenticated to create customer.", '401', 'Authentication required.');
       }
-      
-      const { data: userData, error: userError } = await this.db.auth.getUser();
-      if (userError || !userData.user) {
-        throw new Error("User not authenticated to create customer.");
-      }
-      
-      const userId = userData.user.id;
       
       const customerWithUser = {
         ...customer,
-        user_id: userId
+        user_id: user.id, // Add user_id from the authenticated user
       };
       
       const { data: newCustomer, error } = await this.db
@@ -88,26 +61,14 @@ class CustomerService extends BaseService {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) this.handleError(error, 'فشل في إضافة العميل');
       return newCustomer;
-    } catch (error) {
-      return this.handleError(error, 'فشل في إضافة العميل');
-    }
+    }, 'Failed to create customer');
   }
 
-  async update(id: string, customer: Partial<Customer>) {
-    try {
-      // Check for active session
-      const { data } = await this.db.auth.getSession();
-      if (!data.session) {
-        throw new Error("Authentication required. Please log in.");
-      }
-      
-      const { data: userData, error: userError } = await this.db.auth.getUser();
-      if (userError || !userData.user) {
-        throw new Error("User not authenticated to update customer.");
-      }
-      
+  async update(id: string, customer: Partial<Omit<Customer, 'user_id'>>) { // user_id should not be updatable this way
+    await this.checkPermission('customers:update');
+    return this.executeWithRetry(async () => {
       const { data: updatedCustomer, error } = await this.db
         .from('customers')
         .update(customer)
@@ -115,36 +76,22 @@ class CustomerService extends BaseService {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) this.handleError(error, 'فشل في تحديث بيانات العميل');
       return updatedCustomer;
-    } catch (error) {
-      return this.handleError(error, 'فشل في تحديث بيانات العميل');
-    }
+    }, 'Failed to update customer');
   }
 
   async delete(id: string) {
-    try {
-      // Check for active session
-      const { data } = await this.db.auth.getSession();
-      if (!data.session) {
-        throw new Error("Authentication required. Please log in.");
-      }
-      
-      const { data: userData, error: userError } = await this.db.auth.getUser();
-      if (userError || !userData.user) {
-        throw new Error("User not authenticated to delete customer.");
-      }
-      
+    await this.checkPermission('customers:delete');
+    return this.executeWithRetry(async () => {
       const { error } = await this.db
         .from('customers')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      return this.handleError(error, 'فشل في حذف العميل');
-    }
+      if (error) this.handleError(error, 'فشل في حذف العميل');
+      return true; // Return true on successful deletion
+    }, 'Failed to delete customer');
   }
 }
 

@@ -39,31 +39,44 @@ class SupplierService extends BaseService {
     }, 'Failed to fetch supplier by ID');
   }
 
-  async create(supplier: Omit<Supplier, 'id' | 'user_id'>) { // user_id will be added internally
+  async create(supplierData: Omit<Supplier, 'id' | 'created_at' | 'updated_at' | 'balance'>) { 
+    // Removed user_id from Omit as it's not in Supplier type from DB
+    // Balance is usually calculated, not directly set.
+    // Contact_person, email, phone, address are part of Supplier type.
     await this.checkPermission('suppliers:create');
     return this.executeWithRetry(async () => {
-      const user = await this.getAuthenticatedUser();
-      if (!user) {
-        throw new AppError("User not authenticated to create supplier.", '401', 'Authentication required.');
-      }
+      // const user = await this.getAuthenticatedUser(); // Not needed if user_id is not on suppliers table
+      // if (!user) {
+      //   throw new AppError("User not authenticated to create supplier.", '401', 'Authentication required.');
+      // }
       
-      const supplierWithUser = {
-        ...supplier,
-        user_id: user.id, // Add user_id from the authenticated user
+      // Ensure supplierData matches the table schema (name, contact_person, email, phone, address)
+      const dataToInsert = {
+        name: supplierData.name,
+        contact_person: supplierData.contact_person || null,
+        email: supplierData.email || null,
+        phone: supplierData.phone || null,
+        address: supplierData.address || null,
+        // No user_id as per current schema
       };
       
       const { data: newSupplier, error } = await this.db
         .from('suppliers')
-        .insert(supplierWithUser)
+        .insert(dataToInsert)
         .select()
         .single();
       
-      if (error) this.handleError(error, 'فشل في إضافة المورد');
-      return newSupplier;
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation (likely email)
+            throw new AppError('فشل في إضافة المورد: البريد الإلكتروني موجود بالفعل.', '409', error.details);
+        }
+        this.handleError(error, 'فشل في إضافة المورد');
+      }
+      return newSupplier as Supplier;
     }, 'Failed to create supplier');
   }
 
-  async update(id: string, supplier: Partial<Omit<Supplier, 'user_id'>>) { // user_id should not be updatable
+  async update(id: string, supplierUpdates: Partial<Omit<Supplier, 'id' | 'created_at' | 'updated_at' | 'balance'>>) {
     await this.checkPermission('suppliers:update');
     return this.executeWithRetry(async () => {
       const { data: updatedSupplier, error } = await this.db

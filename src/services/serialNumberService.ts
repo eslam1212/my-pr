@@ -1,9 +1,8 @@
 import { BaseService } from './base.service';
-import { SerialNumber, SerialNumberStatus, TransactionItemSerial, Product } from '../types'; // Ensure Product is imported if needed
+import { SerialNumber, SerialNumberStatus, TransactionItemSerial, Product, StorageLocation } from '../types'; // Ensure Product & StorageLocation are imported
 import { AppError } from '../utils/error-handler';
-import { userService } from './userService'; // For permission checks if needed for serial number operations
-
-class SerialNumberService extends BaseService {
+import { userService } from './userService'; // For permission checks if needed
+import { storageLocationService } from './storageLocationService'; // Import storageLocationService
   private serialTable = 'serial_numbers';
   private transactionItemSerialTable = 'transaction_item_serials';
   private productTable = 'products'; // To check if product is serial tracked
@@ -24,10 +23,10 @@ class SerialNumberService extends BaseService {
     productId: number, 
     serialNumberValue: string, 
     status: SerialNumberStatus = 'in_stock', 
-    // purchaseItemId?: number, // Assuming this will be linked via transaction_item_serials
+    locationId?: string | null, // New optional parameter
     notes?: string
   ): Promise<SerialNumber> {
-    await this.checkPermission('inventory:manage'); // Or a more specific permission
+    // await this.checkPermission('inventory:manage'); // Or a more specific permission
 
     // Check if product is serial tracked
     const { data: product, error: productError } = await this.db
@@ -44,15 +43,30 @@ class SerialNumberService extends BaseService {
     }
 
     return this.executeWithRetry(async () => {
+      let finalLocationId = locationId;
+      if (!finalLocationId) {
+        const defaultLocation = await storageLocationService.getDefaultLocation();
+        if (defaultLocation) {
+          finalLocationId = defaultLocation.id;
+        } else {
+          // Handle case where no default location is set - this might be an error or allowed based on business rules
+          // For now, we'll allow it to be null if no specific or default location is found.
+          // Alternatively, throw an error:
+          // throw new AppError('لا يوجد موقع تخزين افتراضي محدد، ويجب تحديد موقع عند إنشاء الرقم التسلسلي.', '400');
+          console.warn(`No default storage location found for serial number ${serialNumberValue}. It will be unlocated.`);
+        }
+      }
+
       const { data, error } = await this.db
         .from(this.serialTable)
         .insert({ 
           product_id: productId, 
           serial_number: serialNumberValue, 
           status,
+          location_id: finalLocationId, // Use the determined location_id
           notes 
         })
-        .select()
+        .select('*, storage_locations (id, name)') // Example of fetching location name
         .single();
 
       if (error) {
@@ -93,13 +107,28 @@ class SerialNumberService extends BaseService {
   }
 
 
-  async getSerialNumbersForProduct(productId: number, status?: SerialNumberStatus): Promise<SerialNumber[]> {
-    // await this.checkPermission('inventory:view'); // Or a more specific permission
+  async getSerialNumbersForProduct(
+    productId: number, 
+    status?: SerialNumberStatus,
+    locationId?: string | null
+  ): Promise<SerialNumber[]> {
+    // await this.checkPermission('inventory:view');
     return this.executeWithRetry(async () => {
-      let query = this.db.from(this.serialTable).select('*').eq('product_id', productId);
+      let query = this.db
+        .from(this.serialTable)
+        .select('*, storage_location:storage_locations (id, name)') // Join with storage_locations
+        .eq('product_id', productId);
+      
       if (status) {
         query = query.eq('status', status);
       }
+      if (locationId === null) { // Explicitly query for unlocated items
+        query = query.is('location_id', null);
+      } else if (locationId) { // Query for a specific location
+        query = query.eq('location_id', locationId);
+      }
+      // If locationId is undefined, no location filter is applied (fetches from all locations).
+
       const { data, error } = await query;
 
       if (error) {
@@ -112,11 +141,15 @@ class SerialNumberService extends BaseService {
   async getSerialNumberDetails(serialNumberValue: string, productId?: number): Promise<SerialNumber | null> {
     // await this.checkPermission('inventory:view');
     return this.executeWithRetry(async () => {
-      let query = this.db.from(this.serialTable).select('*').eq('serial_number', serialNumberValue);
+      let query = this.db
+        .from(this.serialTable)
+        .select('*, storage_location:storage_locations (id, name)')
+        .eq('serial_number', serialNumberValue);
+        
       if (productId) {
         query = query.eq('product_id', productId);
       }
-      const { data, error } = await query.maybeSingle(); // Returns null if not found
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         this.handleError(error, `فشل في جلب تفاصيل الرقم التسلسلي ${serialNumberValue}`);
@@ -140,15 +173,26 @@ class SerialNumberService extends BaseService {
 
   async updateSerialNumber(
     serialNumberId: number, 
-    updates: { status?: SerialNumberStatus; notes?: string; invoice_item_id?: number | null /* Add other updatable fields if any */ }
+    updates: { 
+      status?: SerialNumberStatus; 
+      notes?: string | null; 
+      invoice_item_id?: number | null;
+      location_id?: string | null; // Allow updating location_id
+    }
   ): Promise<SerialNumber> {
     // await this.checkPermission('inventory:manage');
     return this.executeWithRetry(async () => {
+      // Ensure that if location_id is being set to an empty string, it's converted to null
+      const finalUpdates = { ...updates };
+      if (finalUpdates.location_id === '') {
+        finalUpdates.location_id = null;
+      }
+
       const { data, error } = await this.db
         .from(this.serialTable)
-        .update(updates)
+        .update(finalUpdates)
         .eq('id', serialNumberId)
-        .select()
+        .select('*, storage_location:storage_locations (id, name)')
         .single();
 
       if (error) {
@@ -162,14 +206,27 @@ class SerialNumberService extends BaseService {
    * Checks availability of a list of serial numbers for a given product.
    * Returns a map of serial number string to its availability (true if 'in_stock', false otherwise).
    */
-  async checkAvailability(productId: number, serialNumberValues: string[]): Promise<Map<string, SerialNumber | null>> {
+  async checkAvailability(
+    productId: number, 
+    serialNumberValues: string[],
+    targetLocationId?: string | null // Optional: check availability at a specific location
+  ): Promise<Map<string, SerialNumber | null>> {
     // await this.checkPermission('inventory:view');
     return this.executeWithRetry(async () => {
-      const { data: serials, error } = await this.db
+      let query = this.db
         .from(this.serialTable)
-        .select('*')
+        .select('*, storage_location:storage_locations (id, name)')
         .eq('product_id', productId)
         .in('serial_number', serialNumberValues);
+
+      if (targetLocationId === null) { // Check for unlocated items
+        query = query.is('location_id', null);
+      } else if (targetLocationId) { // Check for specific location
+        query = query.eq('location_id', targetLocationId);
+      }
+      // If targetLocationId is undefined, it checks across all locations.
+
+      const { data: serials, error } = await query;
 
       if (error) {
         this.handleError(error, 'فشل في التحقق من توفر الأرقام التسلسلية.');

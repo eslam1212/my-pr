@@ -78,24 +78,87 @@ export type Product = {
   category_id?: number;
   barcode?: string; // New field
   is_serial_tracked?: boolean; // New field
+  reorder_level?: number; // New field
+  preferred_stock_level?: number; // New field
   created_at: string;
   updated_at?: string;
   user_id: string;
 };
 
+export type StorageLocation = {
+  id: string; // UUID
+  name: string;
+  description?: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at?: string;
+};
+
 export type SerialNumberStatus = 'in_stock' | 'sold' | 'transferred_out' | 'defective' | 'returned' | 'consumed';
 
 export type SerialNumber = {
-  id: number; // Changed from UUID to number (BIGSERIAL) to match migration
-  product_id: number; // Changed from UUID to number
+  id: number; // BIGSERIAL
+  product_id: number; // BIGINT (references products.id)
   serial_number: string;
   status: SerialNumberStatus;
-  // purchase_item_id?: number; // Link to purchase
-  invoice_item_id?: number;  // Link to sale - assuming invoice_items.id is number
-  // current_location_id?: number; // Link to location
+  location_id?: string | null; // UUID (references storage_locations.id)
+  // Optional: For convenience when joining, not a direct DB column usually populated by default unless explicitly selected.
+  storage_location?: Pick<StorageLocation, 'id' | 'name'> | null; 
+  // purchase_item_id?: number; 
+  invoice_item_id?: number;  
   notes?: string;
   created_at: string;
   updated_at?: string;
+};
+
+export type ProductStockLevel = {
+  product_id: number; // BIGINT (references products.id)
+  location_id: string; // UUID (references storage_locations.id)
+  quantity: number;
+  reorder_level?: number; // New field
+  preferred_stock_level?: number; // New field
+  updated_at: string;
+  // Optional: For convenience when joining
+  storage_location?: Pick<StorageLocation, 'id' | 'name'> | null;
+  product?: Pick<Product, 'id' | 'name' | 'sku'> | null;
+};
+
+export type InventoryAdjustmentType = 
+  | 'initial_stock'
+  | 'cycle_count'
+  | 'physical_count'
+  | 'damage'
+  | 'theft'
+  | 'correction_increase'
+  | 'correction_decrease'
+  | 'purchase_receipt' // For non-serial items received
+  | 'sale_dispatch'    // For non-serial items dispatched
+  | 'stock_transfer_out'
+  | 'stock_transfer_in'
+  | 'other';
+
+export type InventoryAdjustment = {
+  id: string; // UUID
+  location_id: string; // UUID of storage_locations
+  product_id: number;  // BIGINT of products
+  counted_quantity: number;
+  expected_quantity: number;
+  variance: number; // Computed: counted_quantity - expected_quantity
+  adjustment_type: InventoryAdjustmentType | string; // Allow string for flexibility if DB uses TEXT
+  notes?: string | null;
+  user_id?: string | null; // UUID of auth.users (who initiated/counted)
+  counted_at: string; // TIMESTAMPTZ
+  is_processed: boolean;
+  processed_at?: string | null; // TIMESTAMPTZ
+  processed_by_user_id?: string | null; // UUID of auth.users
+  created_at: string;
+  updated_at?: string;
+
+  // Optional: For convenience when joining data for display
+  storage_location?: Pick<StorageLocation, 'id' | 'name'> | null;
+  product?: Pick<Product, 'id' | 'name' | 'sku'> | null;
+  user?: Pick<UserProfile, 'id' | 'username' | 'email'> | null; // User who counted/initiated
+  processed_by_user?: Pick<UserProfile, 'id' | 'username' | 'email'> | null; // User who processed
 };
 
 export type TransactionItemSerial = {
@@ -122,18 +185,71 @@ export type Customer = {
   user_id: string;
 };
 
+// Updated Supplier type to match new schema (UUID for id)
 export type Supplier = {
-  id: number;
+  id: string; // UUID
   name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  tax_number?: string;
-  balance: number;
+  contact_person?: string | null;
+  email?: string | null; // Should be unique as per DB schema
+  phone?: string | null;
+  address?: string | null;
+  // tax_number and balance might not be in the new suppliers table directly,
+  // but could be derived or part of another related table (e.g., supplier_financials).
+  // For now, keeping them optional if they are not part of the core supplier table.
+  tax_number?: string | null; 
+  balance?: number; // This is usually a calculated field, not stored directly.
   created_at: string;
   updated_at?: string;
-  user_id: string;
+  // user_id: string; // Removed as per new schema assumption (can be added if needed)
 };
+
+export type PurchaseOrderStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'approved'
+  | 'partially_received'
+  | 'fully_received'
+  | 'cancelled';
+
+export type PurchaseOrder = {
+  id: string; // UUID
+  po_number: string;
+  supplier_id: string; // UUID, references suppliers.id
+  order_date: string; // Date string (e.g., "YYYY-MM-DD")
+  expected_delivery_date?: string | null; // Date string
+  status: PurchaseOrderStatus | string; // Allow string for flexibility if DB ENUM is not strictly mapped
+  notes?: string | null;
+  shipping_address?: string | null;
+  total_amount?: number | null; // NUMERIC
+  created_by_user_id?: string | null; // UUID, references auth.users.id
+  created_at: string; // TIMESTAMPTZ string
+  updated_at?: string; // TIMESTAMPTZ string
+
+  // Optional joined data for convenience
+  supplier?: Pick<Supplier, 'id' | 'name'> | null;
+  created_by_user?: Pick<UserProfile, 'id' | 'username' | 'email'> | null;
+  items?: PurchaseOrderItem[]; // Populated when fetching full PO details
+};
+
+export type PurchaseOrderItem = {
+  id: string; // UUID
+  purchase_order_id: string; // UUID, references purchase_orders.id
+  product_id: number; // BIGINT, references products.id
+  description?: string | null; // Product name by default, or custom
+  quantity: number;
+  unit_price: number; // NUMERIC
+  total_price: number; // NUMERIC, computed: quantity * unit_price
+  received_quantity: number;
+
+  // Optional joined data
+  product?: Pick<Product, 'id' | 'name' | 'sku' | 'is_serial_tracked'> | null;
+  
+  // For UI interaction, especially when receiving goods
+  // This field is client-side, used to temporarily store serials entered by user for this item during receipt.
+  // It's then processed by the backend (e.g., purchaseOrderService.receiveGoods).
+  serial_numbers_to_receive?: string[]; 
+};
+
 
 export type Invoice = {
   id: number;

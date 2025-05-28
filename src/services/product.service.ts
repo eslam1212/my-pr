@@ -45,6 +45,8 @@ class ProductService extends BaseService {
         ...product,
         is_serial_tracked: product.is_serial_tracked ?? false,
         barcode: product.barcode || null, // Ensure barcode is null if empty string or undefined
+        reorder_level: product.reorder_level ?? 0, // Default to 0 if not provided
+        preferred_stock_level: product.preferred_stock_level ?? 0, // Default to 0 if not provided
        };
       
       // Remove the unit field if it's part of the Product type but not in DB schema directly
@@ -89,6 +91,13 @@ class ProductService extends BaseService {
       // Ensure barcode is null if empty string, or keep undefined to not update if not provided
       if (updateData.barcode === '') {
         updateData.barcode = null;
+      }
+      // Ensure reorder_level and preferred_stock_level are numbers, default to 0 if undefined in partial update
+      if ('reorder_level' in updateData && typeof updateData.reorder_level === 'undefined') {
+        updateData.reorder_level = 0;
+      }
+      if ('preferred_stock_level' in updateData && typeof updateData.preferred_stock_level === 'undefined') {
+        updateData.preferred_stock_level = 0;
       }
       
       // Handle minQuantity to min_quantity conversion if frontend uses minQuantity

@@ -123,7 +123,7 @@ const TwoFactorAuthSettings: React.FC<TwoFactorAuthSettingsProps> = ({ userId })
       setIsProcessing(false);
     }
   };
-  
+
   const handleRegenerateBackupCodes = async () => {
     if (!window.confirm('هل أنت متأكد أنك تريد إنشاء رموز احتياطية جديدة؟ سيتم إبطال الرموز القديمة.')) return;
     setIsProcessing(true);
@@ -144,7 +144,7 @@ const TwoFactorAuthSettings: React.FC<TwoFactorAuthSettingsProps> = ({ userId })
       setIsProcessing(false);
     }
   };
-  
+
   const handleLogoutAllDevices = async () => {
     if (!window.confirm('هل أنت متأكد أنك تريد تسجيل الخروج من جميع الأجهزة الأخرى؟ ستحتاج إلى تسجيل الدخول مرة أخرى على هذا الجهاز أيضًا.')) return;
     setIsLoggingOutAll(true);
@@ -153,7 +153,7 @@ const TwoFactorAuthSettings: React.FC<TwoFactorAuthSettingsProps> = ({ userId })
       const result = await authService.logoutFromAllWindows(); // Ensure this is the correct service method
       if (result.success) {
         toast({ title: 'نجاح', description: 'تم تسجيل الخروج من جميع الأجهزة بنجاح. سيتم تسجيل خروجك من هذا الجهاز قريبًا.' });
-        // The actual logout from the current device will be handled by onAuthStateChange 
+        // The actual logout from the current device will be handled by onAuthStateChange
         // or by forcing a redirect after a short delay if needed.
         // For immediate effect, can call local logout too, but global should handle it.
         // await authService.logout(); // Optionally force local logout
@@ -177,11 +177,11 @@ const TwoFactorAuthSettings: React.FC<TwoFactorAuthSettingsProps> = ({ userId })
   return (
     <div className="p-4 md:p-6 bg-white shadow rounded-lg">
       <h2 className="text-xl font-semibold mb-4">إعدادات المصادقة الثنائية (2FA)</h2>
-      
+
       {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">خطأ: {error}</p>}
 
       {is2FAEnabled === null && !isLoading && <p>جاري تحميل الحالة...</p>}
-      
+
       {is2FAEnabled === true && (
         <div className="space-y-4 mb-6 p-4 border border-green-200 bg-green-50 rounded-md">
           <div className="flex items-center">
@@ -198,7 +198,7 @@ const TwoFactorAuthSettings: React.FC<TwoFactorAuthSettingsProps> = ({ userId })
               إنشاء رموز احتياطية جديدة
             </Button>
           </div>
-          
+
           {backupCodes.length > 0 && (
             <div className="mt-4 p-3 bg-gray-100 rounded">
               <h3 className="font-medium mb-2 text-gray-800">الرموز الاحتياطية الخاصة بك:</h3>
@@ -231,13 +231,13 @@ const TwoFactorAuthSettings: React.FC<TwoFactorAuthSettingsProps> = ({ userId })
             <li>قم بتثبيت تطبيق مصادقة (مثل Google Authenticator, Authy, etc.) على هاتفك.</li>
             <li>امسح رمز QR التالي باستخدام التطبيق:</li>
           </ol>
-          
+
           <div className="flex justify-center my-4">
             <img src={qrCodeDataUrl} alt="QR Code for 2FA setup" className="border p-1 rounded-md" />
           </div>
           <p className="text-sm text-gray-600 mb-1">أو أدخل هذا الرمز يدويًا في تطبيق المصادقة:</p>
           <p className="font-mono bg-gray-100 p-2 rounded text-center text-sm text-gray-800 tracking-wider my-2">{setupSecret}</p>
-          
+
           <div className="mt-4 space-y-2">
             <Label htmlFor="verificationToken" className="font-medium">أدخل رمز التحقق من تطبيق المصادقة:</Label>
             <Input

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Product, StorageLocation, InventoryAdjustmentType, UserProfile } from '../../types';
 import { productService } from '../../services/product.service';
 import { storageLocationService } from '../../services/storageLocationService';
-import { stockAdjustmentService } from '../../services/stockAdjustmentService'; 
+import { stockAdjustmentService } from '../../services/stockAdjustmentService';
 import { authService } from '../../services/authService';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -55,7 +55,7 @@ export const StockCountPage: React.FC = () => {
 
 
   const { toast } = useToast();
-  const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } = 
+  const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } =
     useForm<StockCountFormData>({
       resolver: zodResolver(stockCountFormSchema),
       defaultValues: { items: [] },
@@ -81,7 +81,7 @@ export const StockCountPage: React.FC = () => {
         if (defaultLocation && !getValues('location_id')) {
           setValue('location_id', defaultLocation.id);
         }
-        
+
         // Add one empty item by default if no items exist
         if (getValues('items').length === 0) {
             append({ product_id: '', counted_quantity: 0, adjustment_type: 'cycle_count', expected_quantity: 0 });
@@ -123,7 +123,7 @@ export const StockCountPage: React.FC = () => {
       }
     }
   };
-  
+
   useEffect(() => {
     // When location changes, re-fetch expected quantities for all items
     if (selectedLocationId) {
@@ -176,7 +176,7 @@ export const StockCountPage: React.FC = () => {
       setIsSubmittingItem(prev => ({ ...prev, [itemIndex]: false }));
     }
   };
-  
+
   // Overall form submission (e.g. if we want to save all items at once - not current design)
   // const onOverallSubmit = async (data: StockCountFormData) => { ... }
 
@@ -198,8 +198,8 @@ export const StockCountPage: React.FC = () => {
             name="location_id"
             control={control}
             render={({ field }) => (
-              <Select 
-                value={field.value} 
+              <Select
+                value={field.value}
                 onValueChange={(value) => {
                   field.onChange(value);
                   setSelectedLocationId(value); // Trigger re-fetch of expected quantities
@@ -227,7 +227,7 @@ export const StockCountPage: React.FC = () => {
                     </Button>
                 )}
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
               <div className="sm:col-span-2 md:col-span-1">
                 <Label htmlFor={`items.${index}.product_id`}>المنتج</Label>
@@ -278,7 +278,7 @@ export const StockCountPage: React.FC = () => {
                 {errors.items?.[index]?.counted_quantity && <p className="text-xs text-red-500 mt-1">{errors.items[index]?.counted_quantity?.message}</p>}
               </div>
             </div>
-            
+
             {watch(`items.${index}.is_serial_tracked`) && (
                 <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-700">
                     <Info className="inline h-4 w-4 mr-1" /> هذا المنتج يتم تتبعه بالرقم التسلسلي. تسوية هذا البند ستسجل الفرق الإجمالي. المعالجة الدقيقة للأرقام التسلسلية المحددة (المفقودة/الزائدة) تتم في خطوة لاحقة.
@@ -306,9 +306,9 @@ export const StockCountPage: React.FC = () => {
                     {errors.items?.[index]?.adjustment_type && <p className="text-xs text-red-500 mt-1">{errors.items[index]?.adjustment_type?.message}</p>}
                 </div>
                 <div className="flex items-end h-full">
-                    <Button 
-                        type="button" 
-                        onClick={() => handleRecordItem(index)} 
+                    <Button
+                        type="button"
+                        onClick={() => handleRecordItem(index)}
                         disabled={isSubmittingItem[index] || !watch(`items.${index}.product_id`)}
                         className="w-full sm:w-auto flex items-center gap-2"
                     >
@@ -323,11 +323,11 @@ export const StockCountPage: React.FC = () => {
             </div>
           </div>
         ))}
-        
+
         <Button type="button" variant="outline" onClick={() => append({ product_id: '', counted_quantity: 0, adjustment_type: 'cycle_count', expected_quantity: 0 })} className="mt-4 flex items-center gap-2">
           <PlusCircle className="h-4 w-4" /> إضافة بند جرد جديد
         </Button>
-        
+
         {/* Overall form submission button - currently not used as items are saved individually */}
         {/* <div className="mt-8 flex justify-end">
           <Button type="submit" disabled={isLoading || Object.values(isSubmittingItem).some(s => s)} size="lg">

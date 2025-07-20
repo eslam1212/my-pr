@@ -62,7 +62,7 @@ const StorageLocationsPage: React.FC = () => {
       toast({ title: 'خطأ', description: errorMessage, variant: 'destructive' });
     }
   };
-  
+
   const handleSetAsDefault = async (locationId: string) => {
     try {
         await storageLocationService.setAsDefault(locationId);
@@ -82,10 +82,10 @@ const StorageLocationsPage: React.FC = () => {
   const handleModalSave = async (locationData: Omit<StorageLocation, 'id' | 'created_at' | 'updated_at'> | StorageLocation) => {
     try {
       if ('id' in locationData && locationData.id) { // Existing location
-        await storageLocationService.update(locationData.id, { 
-            name: locationData.name, 
+        await storageLocationService.update(locationData.id, {
+            name: locationData.name,
             description: locationData.description,
-            is_default: locationData.is_default 
+            is_default: locationData.is_default
         });
         toast({ title: 'نجاح', description: 'تم تحديث موقع التخزين بنجاح.' });
       } else { // New location

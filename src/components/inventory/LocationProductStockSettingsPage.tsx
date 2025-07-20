@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Product, StorageLocation, ProductStockLevel } from '../../types';
 import { productService } from '../../services/product.service';
 import { storageLocationService } from '../../services/storageLocationService';
-// Assume inventoryService or a new productStockLevelService will have a method 
+// Assume inventoryService or a new productStockLevelService will have a method
 // like upsertProductStockLevelSettings(productId, locationId, reorderLevel, preferredStockLevel, currentQuantity?)
 // For now, we'll mock this interaction or use a conceptual direct DB update via a helper.
 import { supabase } from '../../lib/supabase'; // For direct DB interaction as a placeholder
@@ -77,7 +77,7 @@ const LocationProductStockSettingsPage: React.FC = () => {
             ...response,
             data: response.data?.map(d => ({product_id: d.product_id, count: (d.count as any[])?.length || d.count })) || []
         }));
-        
+
       if (serialError) throw serialError;
       const serialCounts = new Map(serialCountsData?.map(item => [item.product_id, item.count as number]) || []);
 
@@ -154,7 +154,7 @@ const LocationProductStockSettingsPage: React.FC = () => {
         setIsSaving(false);
         return;
       }
-      
+
       // This is a placeholder for what should ideally be a single batch upsert call
       // to an inventoryService method, e.g., inventoryService.batchUpdateProductStockLevelSettings(upsertData)
       // The service method would then handle the upsert logic against product_stock_levels.

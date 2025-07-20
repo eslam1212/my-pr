@@ -65,7 +65,7 @@ export class StorageLocationService extends BaseService {
       return (data as StorageLocation[]) || [];
     }, 'Failed to fetch all storage locations');
   }
-  
+
   async getDefaultLocation(): Promise<StorageLocation | null> {
     return this.executeWithRetry(async () => {
       const { data, error } = await this.db
@@ -90,7 +90,7 @@ export class StorageLocationService extends BaseService {
       // or prevent unsetting if it's the only one (application logic or another trigger).
       // For simplicity, current trigger only acts when NEW.is_default = TRUE.
       // Consider adding logic here if a default location is always required.
-      
+
       if (updates.is_default === false) {
         const currentLocation = await this.getById(id);
         if (currentLocation?.is_default) {
@@ -121,7 +121,7 @@ export class StorageLocationService extends BaseService {
       return data as StorageLocation;
     }, `Failed to update storage location ${id}`);
   }
-  
+
   async setAsDefault(locationId: string): Promise<StorageLocation> {
     // This method explicitly sets a location as default.
     // The database trigger 'trigger_ensure_single_default_location' will handle
@@ -162,14 +162,14 @@ export class StorageLocationService extends BaseService {
       if (stockLevels && stockLevels.length > 0) {
         throw new AppError('لا يمكن حذف الموقع لأنه يحتوي على مخزون لمنتجات غير متسلسلة. قم بنقل المخزون أولاً.', '400');
       }
-      
+
       // Check serial_numbers (serial tracked products)
        const { data: serials, error: serialError } = await this.db
         .from('serial_numbers')
         .select('id')
         .eq('location_id', id)
         .limit(1);
-        
+
       if (serialError) {
         this.handleError(serialError, `فشل في التحقق من الأرقام التسلسلية للموقع ${id}.`);
       }

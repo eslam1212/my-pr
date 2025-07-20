@@ -43,7 +43,7 @@ export const authService = {
       if (!signInData.session || !signInData.user) {
         throw new Error('فشل تسجيل الدخول، لم يتم إرجاع جلسة أو مستخدم.');
       }
-      
+
       // Check if 2FA is enabled for this user
       const userProfile: UserProfile | null = await userService.getUserProfile(signInData.user.id);
 
@@ -59,10 +59,10 @@ export const authService = {
         // For now, we'll assume the UI will handle prompting for 2FA.
         // We are NOT calling await supabase.auth.signOut() here as that would invalidate the MFA state server-side.
         // Instead, the UI should simply not store the session as "fully logged in".
-        
+
         console.log(`User ${signInData.user.id} has 2FA enabled. Token required.`);
-        return { 
-          requires2FA: true, 
+        return {
+          requires2FA: true,
           userId: signInData.user.id, // Pass userId for the 2FA verification step
           // We don't return the session/user yet to prevent premature access
         };
@@ -102,7 +102,7 @@ export const authService = {
       if (!userProfile || !userProfile.is_two_factor_enabled) {
         throw new Error('2FA not enabled or user profile not found.');
       }
-      
+
       // The actual encrypted secret is not available client-side.
       // This mock assumes we'd need to fetch it (which we can't securely do client-side).
       // An Edge function would fetch the *encrypted* secret from DB, decrypt it, then verify.
@@ -111,7 +111,7 @@ export const authService = {
       // THIS IS A VERY ROUGH MOCK FOR THE VERIFICATION LOGIC.
       const tempSecretInfo = twoFactorAuthUtils.generateSecret(userProfile.email!); // Requires email in profile
       const isValidToken = twoFactorAuthUtils.verifyToken(tempSecretInfo.base32, token);
-      
+
       let isValidBackupCode = false;
       if (!isValidToken) {
           // TODO: Fetch (mocked) backup codes and verify.

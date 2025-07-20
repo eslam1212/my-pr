@@ -49,13 +49,13 @@ export const ReceiveGoodsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } = 
+  const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } =
     useForm<ReceiveGoodsFormData>({
       resolver: zodResolver(receiveGoodsFormSchema),
-      defaultValues: { 
+      defaultValues: {
         purchase_order_id: purchaseOrderId,
         receipt_date: new Date().toISOString().split('T')[0],
-        items: [] 
+        items: []
       },
     });
 
@@ -71,7 +71,7 @@ export const ReceiveGoodsPage: React.FC = () => {
     try {
       const poData = await purchaseOrderService.getPurchaseOrderById(purchaseOrderId);
       setPurchaseOrder(poData);
-      
+
       const itemsToReceive = poData.items
         ?.filter(item => (item.received_quantity || 0) < item.quantity) // Only items that need receiving
         .map(item => ({
@@ -85,7 +85,7 @@ export const ReceiveGoodsPage: React.FC = () => {
           serials_input: '',
           serial_numbers_to_receive: [],
         })) || [];
-      
+
       replace(itemsToReceive); // Use replace to set the items array in react-hook-form
 
       const locs = await storageLocationService.getAll();
@@ -184,7 +184,7 @@ export const ReceiveGoodsPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   const watchedItems = watch('items'); // For dynamic rendering of serials input
 
   if (isLoading || !purchaseOrder) {
@@ -317,7 +317,7 @@ export const ReceiveGoodsPage: React.FC = () => {
             </div>
           )})}
         </div>
-        
+
         <div className="mt-8 flex justify-end">
           <Button type="submit" disabled={isSubmitting || isLoading} size="lg" className="flex items-center gap-2">
             {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckSquare className="h-5 w-5" />}

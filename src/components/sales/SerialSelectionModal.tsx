@@ -80,7 +80,7 @@ export const SerialSelectionModal: React.FC<SerialSelectionModalProps> = ({
       setError(null);
     }
   }, [isOpen, product, fetchAvailableSerials]);
-  
+
    useEffect(() => {
     // Re-initialize selectedSerials when previouslySelectedSerials prop changes while modal is open
     if (isOpen) {
@@ -156,7 +156,7 @@ export const SerialSelectionModal: React.FC<SerialSelectionModalProps> = ({
           </div>
         )}
         {error && !isLoading && <p className="text-red-500 bg-red-100 p-3 rounded my-2">خطأ: {error}</p>}
-        
+
         {!isLoading && !error && displayedSerials.length === 0 && (
             <p className="text-center text-gray-500 py-4">لا توجد أرقام تسلسلية متاحة لهذا المنتج حاليًا.</p>
         )}
@@ -170,10 +170,10 @@ export const SerialSelectionModal: React.FC<SerialSelectionModalProps> = ({
                     id={`serial-${serial.id}`}
                     checked={selectedSerials.has(serial.serial_number)}
                     onCheckedChange={() => handleToggleSerial(serial.serial_number)}
-                    disabled={serial.status !== 'in_stock' && !previouslySelectedSerials.includes(serial.serial_number)} 
+                    disabled={serial.status !== 'in_stock' && !previouslySelectedSerials.includes(serial.serial_number)}
                   />
-                  <Label 
-                    htmlFor={`serial-${serial.id}`} 
+                  <Label
+                    htmlFor={`serial-${serial.id}`}
                     className={`flex-1 cursor-pointer text-sm ${serial.status !== 'in_stock' && !previouslySelectedSerials.includes(serial.serial_number) ? 'text-gray-400 line-through' : 'text-gray-700'}`}
                   >
                     {serial.serial_number}
@@ -187,8 +187,8 @@ export const SerialSelectionModal: React.FC<SerialSelectionModalProps> = ({
 
         <div className="mt-6 flex justify-end space-x-2 space-x-reverse">
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={isLoading || selectedSerials.size !== requiredQuantity}
           >
             حفظ ({selectedSerials.size}/{requiredQuantity})

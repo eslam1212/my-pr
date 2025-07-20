@@ -54,7 +54,7 @@ export function UserForm({ onSubmit, onClose, initialData, userIdToEdit }: UserF
       })
       .finally(() => setIsLoadingGroups(false));
   }, [toast]);
-  
+
   useEffect(() => {
     // If editing, fetch current user's group and set it
     if (userIdToEdit) {

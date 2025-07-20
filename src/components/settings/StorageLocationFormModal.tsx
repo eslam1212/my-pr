@@ -40,7 +40,7 @@ export const StorageLocationFormModal: React.FC<StorageLocationFormModalProps> =
       return;
     }
     setFormError(null);
-    
+
     const commonData = {
       name,
       description,

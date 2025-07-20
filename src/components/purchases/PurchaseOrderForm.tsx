@@ -45,13 +45,13 @@ export const PurchaseOrderForm: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [storageLocations, setStorageLocations] = useState<StorageLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false); // For data loading and submission
-  
+
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } = 
+  const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } =
     useForm<PurchaseOrderFormData>({
       resolver: zodResolver(purchaseOrderFormSchema),
-      defaultValues: { 
+      defaultValues: {
         order_date: new Date().toISOString().split('T')[0],
         items: [{ product_id: '', quantity: 1, unit_price: 0, is_serial_tracked: false }]
       },
@@ -244,7 +244,7 @@ export const PurchaseOrderForm: React.FC = () => {
             <PlusCircle className="h-4 w-4" /> إضافة بند جديد
           </Button>
         </div>
-        
+
         <div className="mt-6 pt-4 border-t">
             <div className="flex justify-end items-center text-xl font-semibold text-gray-900">
                 <span>الإجمالي :</span>

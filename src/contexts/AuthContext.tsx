@@ -248,7 +248,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     
     checkCurrentSession();
-    
+
     // Cleanup subscription on component unmount
     return () => {
       subscription?.unsubscribe();
@@ -274,7 +274,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(idleTimerRef.current);
     }
     idleTimerRef.current = setTimeout(handleIdleLogout, IDLE_TIMEOUT_DURATION);
-    // console.log_once('Idle timer reset.'); 
+    // console.log_once('Idle timer reset.');
   }, [handleIdleLogout]);
 
   const clearIdleTimer = () => {
@@ -347,7 +347,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Use the authService.logout which might have more comprehensive logic
       // (though current authService.logout is simple supabase.auth.signOut())
       // The key is that onAuthStateChange will pick up the SIGNED_OUT event.
-      await authService.logout(); 
+      await authService.logout();
       // setAuthState(null) will be called by onAuthStateChange.
       // Redirecting here might be premature if onAuthStateChange handles it.
       // However, explicit redirect ensures timely navigation.

@@ -60,10 +60,10 @@ const InventoryAlertsPage: React.FC = () => {
       ];
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 700));
-      
+
       // Replace with actual service call when available:
       // setAlerts(data);
-      setAlerts(mockData); 
+      setAlerts(mockData);
       if (mockData.length === 0) {
         toast({ title: 'لا تنبيهات', description: 'مستوى المخزون جيد حاليًا.', variant: 'info' });
       }

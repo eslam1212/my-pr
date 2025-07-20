@@ -71,7 +71,7 @@ const PurchaseOrdersPage: React.FC = () => {
           </Link>
         </Button>
       </div>
-      
+
       {/* TODO: Add Filtering UI here */}
       {/* <div className="mb-4 p-4 bg-gray-50 rounded-lg">
         <Label htmlFor="statusFilter">تصفية حسب الحالة:</Label>

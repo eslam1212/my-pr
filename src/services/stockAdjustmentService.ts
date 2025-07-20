@@ -34,7 +34,7 @@ export class StockAdjustmentService extends BaseService {
     input: Omit<InventoryAdjustment, 'id' | 'variance' | 'created_at' | 'updated_at' | 'is_processed' | 'processed_at' | 'processed_by_user_id' | 'user_id'> & {user_id?: string | null}
   ): Promise<InventoryAdjustment> {
     // await userService.checkCurrentUserPermission('inventory:count'); // Example permission
-    
+
     const variance = input.counted_quantity - input.expected_quantity;
     const currentUser = await authService.getCurrentUser(); // Get current user for user_id
 
@@ -115,11 +115,11 @@ export class StockAdjustmentService extends BaseService {
         // This needs careful handling of what `expected_quantity` represents.
         // Assuming `expected_quantity` was the definitive stock *before* the count that led to this adjustment record.
         // And the goal is to make the `product_stock_levels.quantity` = `adjustment.counted_quantity`.
-        
+
         // Fetch current stock level again to calculate precise change needed from *now*.
         const currentStockInfo = await inventoryService.getStockForProduct(adjustment.product_id, adjustment.location_id);
         const quantityChangeToApply = adjustment.counted_quantity - currentStockInfo.quantity;
-        
+
         await inventoryService.updateStockLevel(
           adjustment.product_id,
           adjustment.location_id,
@@ -131,8 +131,8 @@ export class StockAdjustmentService extends BaseService {
       // Mark adjustment as processed
       const { data: updatedAdjustment, error: updateError } = await this.db
         .from(this.adjustmentTable)
-        .update({ 
-          is_processed: true, 
+        .update({
+          is_processed: true,
           processed_at: new Date().toISOString(),
           processed_by_user_id: currentUser.id
         })
@@ -145,7 +145,7 @@ export class StockAdjustmentService extends BaseService {
           processed_by_user:users (id, username, email)
         `)
         .single();
-      
+
       if (updateError) {
         this.handleError(updateError, `فشل في تحديث حالة التسوية ${adjustmentId}.`);
       }
@@ -156,9 +156,9 @@ export class StockAdjustmentService extends BaseService {
   /**
    * Lists inventory adjustments with optional filters.
    */
-  async listInventoryAdjustments(filters: { 
-    locationId?: string; 
-    processed?: boolean; 
+  async listInventoryAdjustments(filters: {
+    locationId?: string;
+    processed?: boolean;
     productId?: number;
     dateFrom?: string;
     dateTo?: string;
@@ -180,7 +180,7 @@ export class StockAdjustmentService extends BaseService {
       if (filters.dateFrom) query = query.gte('counted_at', filters.dateFrom);
       if (filters.dateTo) query = query.lte('counted_at', filters.dateTo);
       if (filters.adjustmentType) query = query.eq('adjustment_type', filters.adjustmentType);
-      
+
       query = query.order('counted_at', { ascending: false });
 
       const { data, error } = await query;

@@ -14,13 +14,13 @@ const productSchema = z.object({
   minQuantity: z.number().min(0, 'الحد الأدنى للكمية يجب أن يكون أكبر من أو يساوي صفر'), // Adjusted min to 0
   unit: z.enum(['piece', 'kilogram', 'box', 'ton', 'sack'] as const),
   description: z.string().optional(),
-  barcode: z.string().optional(), 
-  is_serial_tracked: z.boolean().default(false).optional(), 
+  barcode: z.string().optional(),
+  is_serial_tracked: z.boolean().default(false).optional(),
   reorder_level: z.number().min(0, 'حد إعادة الطلب يجب أن يكون أكبر من أو يساوي صفر').optional().default(0),
   preferred_stock_level: z.number().min(0, 'مستوى المخزون المفضل يجب أن يكون أكبر من أو يساوي صفر').optional().default(0),
 });
 
-export type ProductFormData = z.infer<typeof productSchema>; 
+export type ProductFormData = z.infer<typeof productSchema>;
 
 const unitLabels = {
   piece: 'قطعة',
@@ -44,19 +44,19 @@ export function ProductForm({ onSubmit, onClose, initialData }: ProductFormProps
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: initialData ? 
-      { 
-        ...initialData, 
+    defaultValues: initialData ?
+      {
+        ...initialData,
         is_serial_tracked: initialData.is_serial_tracked ?? false,
         reorder_level: initialData.reorder_level ?? 0,
         preferred_stock_level: initialData.preferred_stock_level ?? 0,
-      } : 
-      { 
-        unit: 'piece', 
-        is_serial_tracked: false, 
-        quantity: 0, 
-        price: 0, 
-        cost: 0, 
+      } :
+      {
+        unit: 'piece',
+        is_serial_tracked: false,
+        quantity: 0,
+        price: 0,
+        cost: 0,
         minQuantity: 0,
         reorder_level: 0,
         preferred_stock_level: 0,
@@ -220,7 +220,7 @@ export function ProductForm({ onSubmit, onClose, initialData }: ProductFormProps
             />
             {errors.barcode && <p className="mt-1 text-sm text-red-600">{errors.barcode.message}</p>}
           </div>
-          
+
           <div className="flex items-center space-x-2 space-x-reverse">
             <input
               {...register('is_serial_tracked')}

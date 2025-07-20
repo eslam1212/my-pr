@@ -128,7 +128,7 @@ GRANT ALL ON SEQUENCE public.user_groups_id_seq TO service_role;
 GRANT ALL ON SEQUENCE public.group_permission_assignments_id_seq TO service_role;
 GRANT ALL ON SEQUENCE public.user_group_assignments_id_seq TO service_role;
 
--- Note: The permission 'users:manage' was included in the seed data. 
+-- Note: The permission 'users:manage' was included in the seed data.
 -- The `missing-features.txt` mentions "تتبع نشاط المستخدمين (User Activity Logs)"
 -- and "إدارة الصلاحيات المتقدمة" which implies managing users.
 -- The new permission 'settings:users:manage' is more aligned with the settings area.

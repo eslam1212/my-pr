@@ -60,7 +60,7 @@ describe('StockTransferPage Component', () => {
   //   it('should allow selecting serial numbers up to the specified quantity', async () => {});
   //   it('should clear selected serials if quantity or product changes', async () => {});
   // });
-  
+
   // TODO: Test form submission
   // describe('Form submission for stock transfer', () => {
   //   it('should submit valid transfer data and call inventoryService.transferStock', async () => {});

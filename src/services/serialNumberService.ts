@@ -20,9 +20,9 @@ import { storageLocationService } from './storageLocationService'; // Import sto
   }
 
   async createSerialNumberEntry(
-    productId: number, 
-    serialNumberValue: string, 
-    status: SerialNumberStatus = 'in_stock', 
+    productId: number,
+    serialNumberValue: string,
+    status: SerialNumberStatus = 'in_stock',
     locationId?: string | null, // New optional parameter
     notes?: string
   ): Promise<SerialNumber> {
@@ -59,12 +59,12 @@ import { storageLocationService } from './storageLocationService'; // Import sto
 
       const { data, error } = await this.db
         .from(this.serialTable)
-        .insert({ 
-          product_id: productId, 
-          serial_number: serialNumberValue, 
+        .insert({
+          product_id: productId,
+          serial_number: serialNumberValue,
           status,
           location_id: finalLocationId, // Use the determined location_id
-          notes 
+          notes
         })
         .select('*, storage_locations (id, name)') // Example of fetching location name
         .single();
@@ -78,7 +78,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
       return data as SerialNumber;
     }, `Failed to create serial number ${serialNumberValue}`);
   }
-  
+
   async addSerialNumberToTransaction(
     serialNumberId: number,
     transactionItemId: number, // e.g., invoice_item_id, purchase_order_item_id
@@ -98,7 +98,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
         .insert(payload)
         .select()
         .single();
-      
+
       if (error) {
         this.handleError(error, 'فشل في ربط الرقم التسلسلي بالمعاملة.');
       }
@@ -108,7 +108,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
 
 
   async getSerialNumbersForProduct(
-    productId: number, 
+    productId: number,
     status?: SerialNumberStatus,
     locationId?: string | null
   ): Promise<SerialNumber[]> {
@@ -118,7 +118,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
         .from(this.serialTable)
         .select('*, storage_location:storage_locations (id, name)') // Join with storage_locations
         .eq('product_id', productId);
-      
+
       if (status) {
         query = query.eq('status', status);
       }
@@ -145,7 +145,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
         .from(this.serialTable)
         .select('*, storage_location:storage_locations (id, name)')
         .eq('serial_number', serialNumberValue);
-        
+
       if (productId) {
         query = query.eq('product_id', productId);
       }
@@ -157,7 +157,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
       return data as SerialNumber | null;
     }, `Failed to fetch details for serial number ${serialNumberValue}`);
   }
-  
+
   async getSerialNumberById(id: number): Promise<SerialNumber | null> {
     return this.executeWithRetry(async () => {
       const { data, error } = await this.db
@@ -172,10 +172,10 @@ import { storageLocationService } from './storageLocationService'; // Import sto
 
 
   async updateSerialNumber(
-    serialNumberId: number, 
-    updates: { 
-      status?: SerialNumberStatus; 
-      notes?: string | null; 
+    serialNumberId: number,
+    updates: {
+      status?: SerialNumberStatus;
+      notes?: string | null;
       invoice_item_id?: number | null;
       location_id?: string | null; // Allow updating location_id
     }
@@ -207,7 +207,7 @@ import { storageLocationService } from './storageLocationService'; // Import sto
    * Returns a map of serial number string to its availability (true if 'in_stock', false otherwise).
    */
   async checkAvailability(
-    productId: number, 
+    productId: number,
     serialNumberValues: string[],
     targetLocationId?: string | null // Optional: check availability at a specific location
   ): Promise<Map<string, SerialNumber | null>> {
@@ -231,18 +231,18 @@ import { storageLocationService } from './storageLocationService'; // Import sto
       if (error) {
         this.handleError(error, 'فشل في التحقق من توفر الأرقام التسلسلية.');
       }
-      
+
       const availabilityMap = new Map<string, SerialNumber | null>();
       serialNumberValues.forEach(snValue => availabilityMap.set(snValue, null)); // Initialize all as not found / not available
 
       (serials as SerialNumber[])?.forEach(snRecord => {
         availabilityMap.set(snRecord.serial_number, snRecord);
       });
-      
+
       return availabilityMap;
     }, 'Failed to check serial number availability.');
   }
-  
+
   async getSerialNumberHistory(serialNumberId: number): Promise<TransactionItemSerial[]> {
     // This method provides a basic history by listing all transaction links.
     // A more detailed history might involve joining with actual transaction tables.

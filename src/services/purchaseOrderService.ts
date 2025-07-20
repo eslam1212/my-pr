@@ -1,9 +1,9 @@
 import { BaseService } from './base.service';
-import { 
-    PurchaseOrder, 
-    PurchaseOrderItem, 
-    PurchaseOrderStatus, 
-    Product, 
+import {
+    PurchaseOrder,
+    PurchaseOrderItem,
+    PurchaseOrderStatus,
+    Product,
     Supplier,
     UserProfile
 } from '../types';
@@ -55,7 +55,7 @@ export class PurchaseOrderService extends BaseService {
 
     return this.executeWithRetry(async () => {
       const poNumber = input.po_number || await this.generatePoNumber();
-      
+
       const poHeaderData = {
         po_number: poNumber,
         supplier_id: input.supplier_id,
@@ -89,7 +89,7 @@ export class PurchaseOrderService extends BaseService {
         // total_price will be calculated by DB trigger
         received_quantity: 0, // Default for new items
       }));
-      
+
       const { data: newPoItems, error: itemsError } = await this.db
         .from(this.poItemTable)
         .insert(itemsToInsert)
@@ -101,7 +101,7 @@ export class PurchaseOrderService extends BaseService {
         this.handleError(itemsError, 'فشل في إضافة بنود أمر الشراء.');
         throw new AppError('فشل في إضافة بنود أمر الشراء.'); // Ensure error is thrown
       }
-      
+
       // Fetch the PO again to get total_amount updated by trigger
       return this.getPurchaseOrderById(newPoHeader.id);
     }, 'Failed to create purchase order.');
@@ -123,7 +123,7 @@ export class PurchaseOrderService extends BaseService {
         `)
         .eq('id', id)
         .single();
-      
+
       if (error || !data) {
         this.handleError(error, `فشل في جلب أمر الشراء بالمعرف ${id}.`);
         throw new AppError(`أمر الشراء ${id} غير موجود.`, '404');
@@ -149,7 +149,7 @@ export class PurchaseOrderService extends BaseService {
       if (filters.supplierId) query = query.eq('supplier_id', filters.supplierId);
       if (filters.dateFrom) query = query.gte('order_date', filters.dateFrom);
       if (filters.dateTo) query = query.lte('order_date', filters.dateTo);
-      
+
       query = query.order('order_date', { ascending: false });
 
       const { data, error } = await query;
@@ -169,14 +169,14 @@ export class PurchaseOrderService extends BaseService {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) this.handleError(error, `فشل في تحديث حالة أمر الشراء ${id}.`);
       return data as PurchaseOrder;
     }, `Failed to update status for PO ${id}.`);
   }
-  
+
   async updatePurchaseOrderItem(
-    poItemId: string, 
+    poItemId: string,
     updates: Partial<Omit<PurchaseOrderItem, 'id' | 'purchase_order_id' | 'product_id' | 'total_price' | 'product'>>
   ): Promise<PurchaseOrderItem> {
     // await userService.checkCurrentUserPermission('purchase_orders:edit_items'); // Or broader PO edit perm
@@ -200,7 +200,7 @@ export class PurchaseOrderService extends BaseService {
 
 
   async receiveGoods(
-    purchaseOrderId: string, 
+    purchaseOrderId: string,
     receivedItemsInfo: ReceivedItemInfo[]
   ): Promise<PurchaseOrder> {
     // await userService.checkCurrentUserPermission('inventory:receive_goods');
@@ -217,7 +217,7 @@ export class PurchaseOrderService extends BaseService {
       for (const receivedItem of receivedItemsInfo) {
         const poItem = po.items?.find(item => item.id === receivedItem.po_item_id);
         if (!poItem) throw new AppError(`بند أمر الشراء ${receivedItem.po_item_id} غير موجود في أمر الشراء ${po.po_number}.`);
-        
+
         const product = poItem.product; // Product details should be joined in getPurchaseOrderById
         if (!product) throw new AppError(`تفاصيل المنتج للبند ${poItem.id} غير موجودة.`);
 
@@ -242,9 +242,9 @@ export class PurchaseOrderService extends BaseService {
           }
           for (const snValue of receivedItem.serial_numbers) {
             const newSerial = await serialNumberService.createSerialNumberEntry(
-              product.id, 
-              snValue, 
-              'in_stock', 
+              product.id,
+              snValue,
+              'in_stock',
               receivedItem.location_id
             );
             // Link serial number to this PO item via transaction_item_serials
@@ -258,8 +258,8 @@ export class PurchaseOrderService extends BaseService {
         } else {
           // This relies on the conceptual inventoryService.updateStockLevel
           await inventoryService.updateStockLevel(
-            product.id, 
-            receivedItem.location_id, 
+            product.id,
+            receivedItem.location_id,
             receivedItem.quantity_received,
             product.name
           );
@@ -275,7 +275,7 @@ export class PurchaseOrderService extends BaseService {
       } else if (updatedPo.items?.some(item => item.received_quantity > 0)) {
         newStatus = 'partially_received';
       }
-      
+
       if (newStatus !== po.status) {
         return this.updatePurchaseOrderStatus(purchaseOrderId, newStatus);
       }

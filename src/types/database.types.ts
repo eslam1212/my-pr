@@ -103,9 +103,9 @@ export type SerialNumber = {
   status: SerialNumberStatus;
   location_id?: string | null; // UUID (references storage_locations.id)
   // Optional: For convenience when joining, not a direct DB column usually populated by default unless explicitly selected.
-  storage_location?: Pick<StorageLocation, 'id' | 'name'> | null; 
-  // purchase_item_id?: number; 
-  invoice_item_id?: number;  
+  storage_location?: Pick<StorageLocation, 'id' | 'name'> | null;
+  // purchase_item_id?: number;
+  invoice_item_id?: number;
   notes?: string;
   created_at: string;
   updated_at?: string;
@@ -123,7 +123,7 @@ export type ProductStockLevel = {
   product?: Pick<Product, 'id' | 'name' | 'sku'> | null;
 };
 
-export type InventoryAdjustmentType = 
+export type InventoryAdjustmentType =
   | 'initial_stock'
   | 'cycle_count'
   | 'physical_count'
@@ -196,7 +196,7 @@ export type Supplier = {
   // tax_number and balance might not be in the new suppliers table directly,
   // but could be derived or part of another related table (e.g., supplier_financials).
   // For now, keeping them optional if they are not part of the core supplier table.
-  tax_number?: string | null; 
+  tax_number?: string | null;
   balance?: number; // This is usually a calculated field, not stored directly.
   created_at: string;
   updated_at?: string;
@@ -243,11 +243,11 @@ export type PurchaseOrderItem = {
 
   // Optional joined data
   product?: Pick<Product, 'id' | 'name' | 'sku' | 'is_serial_tracked'> | null;
-  
+
   // For UI interaction, especially when receiving goods
   // This field is client-side, used to temporarily store serials entered by user for this item during receipt.
   // It's then processed by the backend (e.g., purchaseOrderService.receiveGoods).
-  serial_numbers_to_receive?: string[]; 
+  serial_numbers_to_receive?: string[];
 };
 
 
@@ -291,7 +291,7 @@ export type UserProfile = { // Renamed to UserProfile for clarity, matching publ
   username?: string;
   email?: string;
   role?: string; // Existing role field, can be used for default/fallback
-  
+
   // 2FA related fields
   is_two_factor_enabled?: boolean;
   // two_factor_secret is server-side only, not typically sent to client
@@ -308,7 +308,7 @@ export type AuthenticatedUser = {
     email?: string;
     // other auth-specific fields like app_metadata, user_metadata
     // We might augment this with is_two_factor_enabled from their profile for login flow decisions
-    is_two_factor_enabled?: boolean; 
+    is_two_factor_enabled?: boolean;
 };
 
 

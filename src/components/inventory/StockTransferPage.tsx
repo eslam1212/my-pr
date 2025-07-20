@@ -45,7 +45,7 @@ export const StockTransferPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSerials, setIsLoadingSerials] = useState(false);
   const [selectedItemIndexForSerials, setSelectedItemIndexForSerials] = useState<number | null>(null);
-  
+
   const { toast } = useToast();
   const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue, getValues } = useForm<StockTransferFormData>({
     resolver: zodResolver(stockTransferSchema),
@@ -84,7 +84,7 @@ export const StockTransferPage: React.FC = () => {
       }
     }
   };
-  
+
   const fetchSerialsForSelection = async (itemIndex: number, productId: number, locationId: string) => {
     setSelectedItemIndexForSerials(itemIndex);
     setIsLoadingSerials(true);
@@ -103,7 +103,7 @@ export const StockTransferPage: React.FC = () => {
       setIsLoadingSerials(false);
     }
   };
-  
+
   const handleSourceLocationChange = async (locationId: string) => {
     setValue('from_location_id', locationId);
     // Re-fetch serials for all serial-tracked items if source location changes
@@ -145,15 +145,15 @@ export const StockTransferPage: React.FC = () => {
       // Conceptual call to inventoryService.transferStock
       // This service method needs to be implemented based on the conceptual logic discussed earlier.
       // await inventoryService.transferStock(
-      //   parseInt(item.product_id), 
-      //   data.from_location_id, 
-      //   data.to_location_id, 
-      //   item.quantity, 
+      //   parseInt(item.product_id),
+      //   data.from_location_id,
+      //   data.to_location_id,
+      //   item.quantity,
       //   item.serials_to_transfer
       // );
       // This would be a loop for multiple items if the service handles one product at a time.
       // For now, we simulate for the first item if multiple items are not supported by a single service call.
-      
+
       // Simulate the transfer for each item
       for (const item of data.items) {
          console.log('Simulating transfer for item:', item.product_name, item.quantity, 'from', data.from_location_id, 'to', data.to_location_id, 'serials:', item.serials_to_transfer);
@@ -166,7 +166,7 @@ export const StockTransferPage: React.FC = () => {
          //   item.serials_to_transfer
          // );
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API
       toast({ title: "نجاح", description: "تم تسجيل طلب تحويل المخزون (محاكاة)." });
       reset();
@@ -222,7 +222,7 @@ export const StockTransferPage: React.FC = () => {
             {errors.to_location_id && <p className="mt-1 text-sm text-red-500">{errors.to_location_id.message}</p>}
           </div>
         </div>
-        
+
         <div>
           <Label htmlFor="notes">ملاحظات (اختياري)</Label>
           <Textarea id="notes" {...register('notes')} className="w-full mt-1" rows={2} />
@@ -247,11 +247,11 @@ export const StockTransferPage: React.FC = () => {
                     name={`items.${index}.product_id`}
                     control={control}
                     render={({ field: controllerField }) => (
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           controllerField.onChange(value);
                           handleProductChange(index, value);
-                        }} 
+                        }}
                         defaultValue={controllerField.value}
                       >
                         <SelectTrigger className="w-full mt-1">
@@ -270,7 +270,7 @@ export const StockTransferPage: React.FC = () => {
                   <Input
                     type="number"
                     min="1"
-                    {...register(`items.${index}.quantity`, { valueAsNumber: true, 
+                    {...register(`items.${index}.quantity`, { valueAsNumber: true,
                         onChange: (e) => {
                             const newQuantity = parseInt(e.target.value) || 0;
                             setValue(`items.${index}.quantity`, newQuantity);

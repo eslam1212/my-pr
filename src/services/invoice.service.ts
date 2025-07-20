@@ -131,7 +131,7 @@ import { serialNumberService } from './serialNumberService'; // Import serialNum
       const createdInvoiceItems: InvoiceItem[] = [];
       for (const item of itemPayloads) {
         const { serial_numbers_provided, ...itemData } = item; // Separate serials from item data
-        
+
         const { data: newInvoiceItem, error: itemError } = await this.db
           .from('invoice_items')
           .insert({
@@ -146,7 +146,7 @@ import { serialNumberService } from './serialNumberService'; // Import serialNum
           throw new AppError(`فشل في إضافة بند الفاتورة للمنتج ID ${itemData.product_id}: ${itemError.message}`);
         }
         if (!newInvoiceItem) throw new AppError('فشل في إنشاء بند الفاتورة.');
-        
+
         createdInvoiceItems.push(newInvoiceItem as InvoiceItem);
 
         // Process serial numbers if applicable
@@ -156,8 +156,8 @@ import { serialNumberService } from './serialNumberService'; // Import serialNum
             const snRecord = await serialNumberService.getSerialNumberDetails(snValue, productDetails.id);
             if (snRecord && snRecord.status === 'in_stock') {
               // Update serial number status and link to invoice item
-              await serialNumberService.updateSerialNumber(snRecord.id, { 
-                status: 'sold', 
+              await serialNumberService.updateSerialNumber(snRecord.id, {
+                status: 'sold',
                 invoice_item_id: newInvoiceItem.id // Link SN directly to invoice_item
               });
               // Create a record in transaction_item_serials
@@ -176,7 +176,7 @@ import { serialNumberService } from './serialNumberService'; // Import serialNum
           }
         }
       }
-      
+
       // --- END DATABASE TRANSACTION (Conceptual) ---
 
       return this.getById(newInvoice.id.toString()); // Fetch the full invoice with details

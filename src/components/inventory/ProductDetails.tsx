@@ -78,7 +78,7 @@ const ProductDetailsPage: React.FC = () => {
     <PageWrapper className="p-4 md:p-6">
       <div className="mb-6">
         <Button variant="outline" size="sm" asChild>
-          <Link to="/inventory"> 
+          <Link to="/inventory">
             <ArrowRight className="h-4 w-4 ml-1" /> العودة إلى قائمة المنتجات
           </Link>
         </Button>
@@ -127,8 +127,8 @@ const ProductDetailsPage: React.FC = () => {
           <div className="p-4 bg-white">
             <h4 className="text-sm font-medium text-gray-500 mb-1">تتبع بالرقم التسلسلي</h4>
             <p className="text-md font-semibold text-gray-800 flex items-center">
-              {product.is_serial_tracked ? 
-                <CheckCircle className="h-5 w-5 mr-2 text-green-500" /> : 
+              {product.is_serial_tracked ?
+                <CheckCircle className="h-5 w-5 mr-2 text-green-500" /> :
                 <XCircle className="h-5 w-5 mr-2 text-red-500" />
               }
               {product.is_serial_tracked ? 'نعم' : 'لا'}

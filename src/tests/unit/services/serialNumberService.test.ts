@@ -33,7 +33,7 @@ describe('SerialNumberService', () => {
   //   it('should filter serials by location', async () => {});
   //   it('should include location name if joined', async () => {});
   // });
-  
+
   // TODO: Test getSerialNumberDetails
   // describe('getSerialNumberDetails', () => {
   //   it('should return details for a specific serial number string', async () => {});
@@ -52,7 +52,7 @@ describe('SerialNumberService', () => {
   //   it('should correctly report availability of serial numbers', async () => {});
   //   it('should check against a specific location if provided', async () => {});
   // });
-  
+
   // TODO: Test deleteSerialNumber
   // describe('deleteSerialNumber', () => {
   //   it('should delete an unused serial number', async () => {});

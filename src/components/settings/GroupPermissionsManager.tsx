@@ -76,7 +76,7 @@ const GroupPermissionsManager: React.FC<GroupPermissionsManagerProps> = ({ group
   if (error && allPermissions.length === 0) { // Show error only if we couldn't load initial permissions
     return <div className="p-4 text-red-500">خطأ: {error}</div>;
   }
-  
+
   // Group permissions by a common prefix (e.g., "products", "invoices") for better UI
   const groupedPermissions: Record<string, Permission[]> = allPermissions.reduce((acc, perm) => {
     const groupKey = perm.name.split(':')[0] || 'general';
@@ -92,7 +92,7 @@ const GroupPermissionsManager: React.FC<GroupPermissionsManagerProps> = ({ group
     <div className="p-4 border rounded-lg mt-6">
       <h3 className="text-lg font-semibold mb-1">إدارة أذونات المجموعة: {groupName}</h3>
       <p className="text-sm text-gray-600 mb-4">حدد الأذونات التي ترغب في منحها لهذه المجموعة.</p>
-      
+
       {error && <p className="text-red-500 mb-3">خطأ أثناء الحفظ: {error}</p>}
 
       <div className="space-y-4">

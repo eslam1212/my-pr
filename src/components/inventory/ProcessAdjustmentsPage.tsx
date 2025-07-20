@@ -45,7 +45,7 @@ const ProcessAdjustmentsPage: React.FC = () => {
       setIsProcessing(prev => ({ ...prev, [adjustmentId]: false }));
     }
   };
-  
+
   const getAdjustmentTypeLabel = (type: string): string => {
     const types: { [key: string]: string } = {
       cycle_count: 'جرد دوري',
@@ -99,16 +99,16 @@ const ProcessAdjustmentsPage: React.FC = () => {
                 {/* Column 1: Product & Location Info */}
                 <div className="space-y-2">
                   <h3 className="text-md font-semibold text-indigo-700 flex items-center">
-                    <Package className="h-5 w-5 ml-2 text-indigo-500" /> 
+                    <Package className="h-5 w-5 ml-2 text-indigo-500" />
                     {adj.product?.name || `منتج ID: ${adj.product_id}`}
                     {adj.product?.is_serial_tracked && <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full mr-2">متسلسل</span>}
                   </h3>
                   <p className="text-sm text-gray-600 flex items-center">
-                    <MapPin className="h-4 w-4 ml-1 text-gray-400" /> 
+                    <MapPin className="h-4 w-4 ml-1 text-gray-400" />
                     الموقع: {adj.storage_location?.name || `موقع ID: ${adj.location_id}`}
                   </p>
                    <p className="text-sm text-gray-600 flex items-center">
-                    <FileText className="h-4 w-4 ml-1 text-gray-400" /> 
+                    <FileText className="h-4 w-4 ml-1 text-gray-400" />
                     نوع التسوية: <span className="font-medium">{getAdjustmentTypeLabel(adj.adjustment_type)}</span>
                   </p>
                 </div>
@@ -121,7 +121,7 @@ const ProcessAdjustmentsPage: React.FC = () => {
                     الفرق: <span className="font-mono">{adj.variance}</span>
                   </p>
                 </div>
-                
+
                 {/* Column 3: Details & Actions */}
                 <div className="space-y-2 text-sm md:text-left">
                   <p className="text-gray-500">
@@ -131,10 +131,10 @@ const ProcessAdjustmentsPage: React.FC = () => {
                     تاريخ الجرد: {formatDate(adj.counted_at)}
                   </p>
                   {adj.notes && <p className="text-gray-600 bg-gray-50 p-2 rounded text-xs border">ملاحظات: {adj.notes}</p>}
-                  
+
                   <div className="pt-2">
-                    <Button 
-                      onClick={() => handleProcessAdjustment(adj.id)} 
+                    <Button
+                      onClick={() => handleProcessAdjustment(adj.id)}
                       disabled={isProcessing[adj.id]}
                       size="sm"
                       className="w-full md:w-auto flex items-center gap-2 bg-green-600 hover:bg-green-700"
@@ -151,7 +151,7 @@ const ProcessAdjustmentsPage: React.FC = () => {
               </div>
                {adj.product?.is_serial_tracked && (
                 <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-xs text-yellow-800 flex items-center">
-                    <AlertCircle className="inline h-4 w-4 mr-2 flex-shrink-0" /> 
+                    <AlertCircle className="inline h-4 w-4 mr-2 flex-shrink-0" />
                     <span>هذا منتج يتم تتبعه بالرقم التسلسلي. المعالجة الحالية ستسجل الفرق الإجمالي. قد تحتاج إلى إجراءات يدوية لتحديث حالة الأرقام التسلسلية الفردية.</span>
                 </div>
               )}

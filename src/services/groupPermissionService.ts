@@ -34,7 +34,7 @@ export class GroupPermissionService extends BaseService {
         .from(this.assignmentTable)
         .insert({ group_id: groupId, permission_id: permissionId })
         .select();
-      
+
       if (error) {
         this.handleError(error, `Error assigning permission ${permissionId} to group ${groupId}`);
         return null;
@@ -73,7 +73,7 @@ export class GroupPermissionService extends BaseService {
         this.handleError(error, `Error fetching permissions for group ${groupId}`);
         return [];
       }
-      
+
       // Extract the permission objects from the nested structure
       return data?.map(item => (item.permissions as Permission)).filter(p => p !== null) || [];
     }, `Failed to fetch permissions for group ${groupId}`);
@@ -126,7 +126,7 @@ export class GroupPermissionService extends BaseService {
         const { error: addError } = await this.db.from(this.assignmentTable).insert(newAssignments);
         if (addError) {
           this.handleError(addError, `Error adding new permissions to group ${groupId}`);
-          return false; 
+          return false;
         }
       }
 

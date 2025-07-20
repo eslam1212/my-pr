@@ -39,7 +39,7 @@ class SupplierService extends BaseService {
     }, 'Failed to fetch supplier by ID');
   }
 
-  async create(supplierData: Omit<Supplier, 'id' | 'created_at' | 'updated_at' | 'balance'>) { 
+  async create(supplierData: Omit<Supplier, 'id' | 'created_at' | 'updated_at' | 'balance'>) {
     // Removed user_id from Omit as it's not in Supplier type from DB
     // Balance is usually calculated, not directly set.
     // Contact_person, email, phone, address are part of Supplier type.
@@ -49,7 +49,7 @@ class SupplierService extends BaseService {
       // if (!user) {
       //   throw new AppError("User not authenticated to create supplier.", '401', 'Authentication required.');
       // }
-      
+
       // Ensure supplierData matches the table schema (name, contact_person, email, phone, address)
       const dataToInsert = {
         name: supplierData.name,
@@ -59,7 +59,7 @@ class SupplierService extends BaseService {
         address: supplierData.address || null,
         // No user_id as per current schema
       };
-      
+
       const { data: newSupplier, error } = await this.db
         .from('suppliers')
         .insert(dataToInsert)

@@ -17,7 +17,7 @@ export class UserAssignmentService extends BaseService {
         .from(this.assignmentTable)
         .upsert({ user_id: userId, group_id: groupId }, { onConflict: 'user_id' })
         .select();
-      
+
       if (error) {
         this.handleError(error, `Error assigning user ${userId} to group ${groupId}`);
         return null;
@@ -63,7 +63,7 @@ export class UserAssignmentService extends BaseService {
       return data?.user_groups || null;
     }, `Failed to fetch group for user ${userId}`);
   }
-  
+
   async getUsersByGroup(groupId: number): Promise<User[]> {
     return this.executeWithRetry<User[]>(async () => {
       // This requires joining with the 'users' table (auth.users).
@@ -82,7 +82,7 @@ export class UserAssignmentService extends BaseService {
         this.handleError(error, `Error fetching users for group ${groupId}`);
         return [];
       }
-      
+
       // Assuming 'users' relation correctly fetches user details.
       // If 'users' is not a direct relation, you might get just user_ids
       // and then need to fetch user details separately.

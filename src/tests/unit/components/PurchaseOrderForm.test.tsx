@@ -68,7 +68,7 @@ describe('PurchaseOrderForm Component', () => {
   //   it('should autofill cost price when a product is selected', async () => {});
   //   it('should update is_serial_tracked state when product changes', async () => {});
   // });
-  
+
   // TODO: Test form submission with valid data
   // describe('Form submission', () => {
   //   it('should submit valid data and call purchaseOrderService.createPurchaseOrder', async () => {});

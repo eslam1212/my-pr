@@ -15,7 +15,7 @@ export class UserGroupService extends BaseService {
         .from(this.tableName)
         .insert(groupData)
         .select();
-      
+
       if (error) {
         this.handleError(error, 'Error creating user group');
         return null; // Should be unreachable due to handleError throwing
@@ -34,7 +34,7 @@ export class UserGroupService extends BaseService {
 
       if (error) {
         if (error.code === 'PGRST116') { // PGRST116: "Query returned 0 rows"
-          return null; 
+          return null;
         }
         this.handleError(error, `Error fetching user group with id ${groupId}`);
         return null;
@@ -50,7 +50,7 @@ export class UserGroupService extends BaseService {
         .select('*')
         .eq('group_name', groupName)
         .single();
-      
+
       if (error) {
         if (error.code === 'PGRST116') {
           return null;
@@ -61,7 +61,7 @@ export class UserGroupService extends BaseService {
       return data;
     }, `Failed to fetch user group with name ${groupName}`);
   }
-  
+
   async getAllUserGroups(): Promise<UserGroup[]> {
     return this.executeWithRetry<UserGroup[]>(async () => {
       const { data, error }: PostgrestResponse<UserGroup> = await this.db

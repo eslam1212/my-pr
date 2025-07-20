@@ -120,9 +120,9 @@ useEffect(() => {
           <h1 className="text-2xl font-bold">إعدادات النظام</h1>
           <p className="text-muted-foreground mt-1">قم بتخصيص إعدادات النظام حسب تفضيلاتك</p>
         </div>
-        <Button 
-          onClick={handleSave} 
-          size="lg" 
+        <Button
+          onClick={handleSave}
+          size="lg"
           className="gap-2 w-full sm:w-auto"
           disabled={isSaving || !currentUserId} // Disable save if no user or saving
         >

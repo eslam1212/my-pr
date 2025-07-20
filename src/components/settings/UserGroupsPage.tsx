@@ -128,9 +128,9 @@ const UserGroupsPage: React.FC = () => {
       />
 
       {managingPermissionsForGroup ? (
-        <GroupPermissionsManager 
-          groupId={managingPermissionsForGroup.id} 
-          groupName={managingPermissionsForGroup.group_name} 
+        <GroupPermissionsManager
+          groupId={managingPermissionsForGroup.id}
+          groupName={managingPermissionsForGroup.group_name}
         />
       ) : (
         <div className="bg-white shadow rounded-lg overflow-x-auto">

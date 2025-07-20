@@ -49,13 +49,13 @@ CREATE TABLE IF NOT EXISTS public.transaction_item_serials (
     -- purchase_order_item_id BIGINT REFERENCES public.purchase_order_items(id) ON DELETE CASCADE,
     -- stock_transfer_item_id BIGINT REFERENCES public.stock_transfer_items(id) ON DELETE CASCADE,
     -- stock_adjustment_item_id BIGINT REFERENCES public.stock_adjustment_items(id) ON DELETE CASCADE,
-    
+
     serial_number_id BIGINT NOT NULL REFERENCES public.serial_numbers(id) ON DELETE RESTRICT, -- Prevent deleting SN if tied to transaction
     transaction_type TEXT NOT NULL, -- e.g., 'sale', 'purchase_receipt', 'transfer_out', 'transfer_in', 'stock_adjustment'
-    
+
     -- Optional: Store quantity if a transaction item could involve multiple serials (though usually 1 for serial tracked)
-    -- quantity INTEGER DEFAULT 1 NOT NULL CHECK (quantity > 0), 
-    
+    -- quantity INTEGER DEFAULT 1 NOT NULL CHECK (quantity > 0),
+
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     -- No updated_at here as these records are typically immutable facts of a transaction.
 );
@@ -83,8 +83,8 @@ CREATE INDEX IF NOT EXISTS idx_transaction_item_serials_invoice_item_id ON publi
 -- CREATE INDEX IF NOT EXISTS idx_transaction_item_serials_purchase_item_id ON public.transaction_item_serials(purchase_order_item_id);
 CREATE INDEX IF NOT EXISTS idx_transaction_item_serials_serial_number_id ON public.transaction_item_serials(serial_number_id);
 
--- Note: The commented out FKs (purchase_item_id, current_location_id in serial_numbers, 
--- and purchase_order_item_id, stock_transfer_item_id in transaction_item_serials) 
+-- Note: The commented out FKs (purchase_item_id, current_location_id in serial_numbers,
+-- and purchase_order_item_id, stock_transfer_item_id in transaction_item_serials)
 -- depend on other tables (purchase_order_items, locations, stock_transfer_items) which are not yet defined
 -- in this specific migration. They should be added/uncommented when those tables are available.
 -- For the purpose of this task, I'll focus on the core structure with sales invoices.

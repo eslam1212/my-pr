@@ -29,7 +29,7 @@ describe('StorageLocationService', () => {
   // describe('getAll', () => {
   //   it('should return all storage locations', async () => {});
   // });
-  
+
   // TODO: Test getDefaultLocation
   // describe('getDefaultLocation', () => {
   //   it('should return the default location if one is set', async () => {});
@@ -41,7 +41,7 @@ describe('StorageLocationService', () => {
   //   it('should update location details successfully', async () => {});
   //   it('should handle setting a new default location correctly', async () => {});
   // });
-  
+
   // TODO: Test setAsDefault
   // describe('setAsDefault', () => {
   //   it('should set the specified location as default', async () => {});

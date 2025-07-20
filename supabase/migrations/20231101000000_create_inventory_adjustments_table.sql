@@ -21,19 +21,19 @@ CREATE TABLE IF NOT EXISTS public.inventory_adjustments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     location_id UUID NOT NULL REFERENCES public.storage_locations(id) ON DELETE RESTRICT,
     product_id BIGINT NOT NULL REFERENCES public.products(id) ON DELETE RESTRICT,
-    
+
     counted_quantity INTEGER NOT NULL, -- Actual quantity found/counted
     expected_quantity INTEGER NOT NULL, -- System quantity before this adjustment/count
     variance INTEGER NOT NULL, -- Should be (counted_quantity - expected_quantity) for counts, or the adjustment amount itself
-    
+
     -- adjustment_type public.inventory_adjustment_type NOT NULL,
     adjustment_type TEXT NOT NULL, -- Using TEXT for flexibility for now
-    
+
     notes TEXT,
     user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- User who initiated/counted
-    
+
     counted_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    
+
     is_processed BOOLEAN DEFAULT FALSE NOT NULL,
     processed_at TIMESTAMPTZ,
     processed_by_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- User who processed the adjustment

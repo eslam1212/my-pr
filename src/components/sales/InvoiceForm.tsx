@@ -77,11 +77,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onSuccess }) => {
   // currentProductForSerial is already available as `products.find(p => p.id.toString() === items[currentItemIndexForSerial!].product_id)`
   // Or we can pass the specific product object to the modal. Let's pass the product object.
   const [productForSerialModal, setProductForSerialModal] = useState<Product | null>(null);
-  
-  const { toast } = useToast(); 
+
+  const { toast } = useToast();
   // Remove useFormContext if not using FormProvider wrapper for this specific form.
   // If InvoiceForm is not wrapped in <FormProvider {...methods}>, then control, getValues, setValue come directly from useForm.
-  // const { control, getValues, setValue: setFormValue } = useFormContext<InvoiceFormData>(); 
+  // const { control, getValues, setValue: setFormValue } = useFormContext<InvoiceFormData>();
   // These are already available from the main useForm hook:
   // const { register, handleSubmit, formState: { errors }, reset, watch, setValue, control } = useForm<InvoiceFormData>({...});
 
@@ -189,12 +189,12 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onSuccess }) => {
         ...baseInvoiceData,
         items: invoiceItemsPayload,
       };
-      
+
       if (data.type === 'sale') {
         await invoiceService.create(finalPayload as any); // Cast if types are slightly off due to Omit
       } else {
         // Assuming purchaseService.create has a similar signature for items
-        await purchaseService.create(finalPayload as any); 
+        await purchaseService.create(finalPayload as any);
       }
       
       toast({ title: "نجاح", description: "تم إنشاء الفاتورة بنجاح." });
@@ -209,7 +209,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onSuccess }) => {
       });
     }
   };
-  
+
   const addInvoiceItem = (product: Product, quantity: number = 1, serials?: string[]) => {
     const price = invoiceType === 'purchase' ? product.cost : product.price;
     const newItem: FormInvoiceItem = {
@@ -225,7 +225,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onSuccess }) => {
       discount_amount: 0,
       tax_amount: 0,
       total_amount: price * quantity,
-      created_at: '', 
+      created_at: '',
       updated_at: '',
     };
     setValue('items', [...items, newItem]);
@@ -249,7 +249,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onSuccess }) => {
             setCurrentItemIndexForSerial(items.length); // New item will be at the end
             setIsSerialModalOpen(true);
           }
-        } 
+        }
         else {
           addInvoiceItem(product, 1);
            if (product.is_serial_tracked) {
@@ -301,7 +301,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ onSuccess }) => {
       }
     }
   };
-  
+
   const handleOpenSerialModal = (index: number) => {
     const item = items[index]; // Or getValues(`items.${index}`) if using FormProvider extensively
     const product = products.find(p => p.id.toString() === item.product_id);
@@ -381,7 +381,7 @@ import SerialSelectionModal from './SerialSelectionModal'; // Import the actual 
           </select>
         </div>
       </div>
-      
+
       {contactType === 'existing' && (
         <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -495,7 +495,7 @@ import SerialSelectionModal from './SerialSelectionModal'; // Import the actual 
                 حذف
               </button>
             </div>
-            
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">المنتج</label>
               <select
@@ -518,7 +518,7 @@ import SerialSelectionModal from './SerialSelectionModal'; // Import the actual 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">الكمية</label>
                 <input
-                  {...register(`items.${index}.quantity`, { valueAsNumber: true, 
+                  {...register(`items.${index}.quantity`, { valueAsNumber: true,
                     onChange: (e) => {
                       const product = products.find(p => p.id.toString() === items[index].product_id);
                       if (product?.is_serial_tracked) {
@@ -550,12 +550,12 @@ import SerialSelectionModal from './SerialSelectionModal'; // Import the actual 
                 )}
               </div>
             </div>
-            
+
             {item.is_serial_tracked && item.quantity > 0 && (
               <div className="mt-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => handleOpenSerialModal(index)}>
-                  {item.serial_numbers_provided && item.serial_numbers_provided.length === item.quantity 
-                    ? `تم اختيار ${item.serial_numbers_provided.length} رقم تسلسلي` 
+                  {item.serial_numbers_provided && item.serial_numbers_provided.length === item.quantity
+                    ? `تم اختيار ${item.serial_numbers_provided.length} رقم تسلسلي`
                     : `اختيار الأرقام التسلسلية (${item.serial_numbers_provided?.length || 0}/${item.quantity})`}
                 </Button>
                 {item.serial_numbers_provided && item.serial_numbers_provided.length > 0 && item.serial_numbers_provided.length !== item.quantity && (
@@ -577,7 +577,7 @@ import SerialSelectionModal from './SerialSelectionModal'; // Import the actual 
       >
         + إضافة منتج يدوياً
       </button>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t mt-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">طريقة الدفع</label>
@@ -596,7 +596,7 @@ import SerialSelectionModal from './SerialSelectionModal'; // Import the actual 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ المدفوع</label>
             <input
-              {...register('paid_amount', { valueAsNumber: true, 
+              {...register('paid_amount', { valueAsNumber: true,
                 validate: value => paymentMethod === 'cash' ? value === totalAmount : (value !== undefined && value >= 0)
               })}
               type="number"

@@ -149,7 +149,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'serial_numbers' AND table_schema = 'public') THEN
         -- First, check if the column exists. If not, add it.
         IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns 
+            SELECT 1 FROM information_schema.columns
             WHERE table_name='serial_numbers' AND column_name='purchase_item_id' AND table_schema='public'
         ) THEN
             ALTER TABLE public.serial_numbers ADD COLUMN purchase_item_id UUID;
@@ -160,11 +160,11 @@ BEGIN
             SELECT 1 FROM information_schema.table_constraints
             WHERE constraint_name='fk_serial_numbers_purchase_item' AND table_name='serial_numbers' AND table_schema='public'
         ) THEN
-            ALTER TABLE public.serial_numbers 
-            ADD CONSTRAINT fk_serial_numbers_purchase_item 
-            FOREIGN KEY (purchase_item_id) 
+            ALTER TABLE public.serial_numbers
+            ADD CONSTRAINT fk_serial_numbers_purchase_item
+            FOREIGN KEY (purchase_item_id)
             REFERENCES public.purchase_order_items(id) ON DELETE SET NULL;
-            
+
             COMMENT ON COLUMN public.serial_numbers.purchase_item_id IS 'Link to the purchase order item through which this serial entered stock.';
         END IF;
     END IF;
@@ -175,7 +175,7 @@ DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'transaction_item_serials' AND table_schema = 'public') THEN
         IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns 
+            SELECT 1 FROM information_schema.columns
             WHERE table_name='transaction_item_serials' AND column_name='purchase_order_item_id' AND table_schema='public'
         ) THEN
             ALTER TABLE public.transaction_item_serials ADD COLUMN purchase_order_item_id UUID;
@@ -185,11 +185,11 @@ BEGIN
             SELECT 1 FROM information_schema.table_constraints
             WHERE constraint_name='fk_transaction_item_serials_po_item' AND table_name='transaction_item_serials' AND table_schema='public'
         ) THEN
-            ALTER TABLE public.transaction_item_serials 
-            ADD CONSTRAINT fk_transaction_item_serials_po_item 
-            FOREIGN KEY (purchase_order_item_id) 
+            ALTER TABLE public.transaction_item_serials
+            ADD CONSTRAINT fk_transaction_item_serials_po_item
+            FOREIGN KEY (purchase_order_item_id)
             REFERENCES public.purchase_order_items(id) ON DELETE CASCADE;
-            
+
             COMMENT ON COLUMN public.transaction_item_serials.purchase_order_item_id IS 'Link to an item on a purchase order receipt.';
         END IF;
     END IF;

@@ -35,7 +35,7 @@ export const UserGroupFormModal: React.FC<UserGroupFormModalProps> = ({ isOpen, 
       return;
     }
     setFormError(null);
-    
+
     const commonData = {
       group_name: groupName,
       description: description,

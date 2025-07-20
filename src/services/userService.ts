@@ -53,7 +53,7 @@ export const userService = {
         console.log(`Group ${userGroup.group_name} (ID: ${userGroup.id}) has no permissions assigned.`);
         return false;
       }
-      
+
       const hasPermission = groupPermissions.some(p => p.name === permissionName);
       if (hasPermission) {
         console.log(`User ${userId} HAS permission "${permissionName}" via group "${userGroup.group_name}".`);
@@ -102,7 +102,7 @@ export const userService = {
         console.error('Auth signup error:', authError);
         throw authError;
       }
-      
+
       if (!authData.user) {
         throw new Error('User not created in auth.');
       }
@@ -117,7 +117,7 @@ export const userService = {
         role: user.role,         // Store initial role if provided
         // any other fields from UserFormData that go into the profile
       };
-      
+
       const { data, error } = await supabase
         .from('users') // This refers to your public.users profile table
         .insert(profileData)
@@ -130,7 +130,7 @@ export const userService = {
         // This can be complex to handle robustly.
         throw error;
       }
-      
+
       // Optionally, assign user to a default group upon creation
       // For example, assign to a "Default User" group if one exists
       // const defaultGroup = await userGroupService.getUserGroupByName('Default User');
@@ -216,7 +216,7 @@ export const userService = {
       // If you have an Edge Function for this:
       // const { error: authUserError } = await supabase.functions.invoke('delete-auth-user', { body: { userId } });
       // if (authUserError) throw authUserError;
-      
+
       // If only deleting from public.users:
       if (profileError) throw profileError;
 
@@ -267,7 +267,7 @@ export const userService = {
     // const { data, error } = await supabase.functions.invoke('enable-2fa', { body: payload });
     // if (error) throw error;
     // return data as Enable2FAResponse;
-    
+
     // Mock implementation:
     console.log_once('userService.enableTwoFactor: Using mocked implementation.');
     const isValid = twoFactorAuthUtils.verifyToken(payload.secret, payload.token);
@@ -276,12 +276,12 @@ export const userService = {
       // This would happen inside the Edge Function.
       await supabase
         .from('users')
-        .update({ 
-          is_two_factor_enabled: true, 
+        .update({
+          is_two_factor_enabled: true,
           // two_factor_secret: encrypt(payload.secret) // Pseudocode for encryption
         })
         .eq('id', currentUser.id);
-      
+
       const backupCodes = twoFactorAuthUtils.generateBackupCodes();
       // Simulate storing encrypted backup codes in DB (also in Edge Function)
       // await supabase.from('users').update({ two_factor_backup_codes: encryptArray(backupCodes) });
@@ -310,15 +310,15 @@ export const userService = {
     // This would happen inside the Edge Function.
     await supabase
       .from('users')
-      .update({ 
-        is_two_factor_enabled: false, 
-        two_factor_secret: null, 
-        two_factor_backup_codes: null 
+      .update({
+        is_two_factor_enabled: false,
+        two_factor_secret: null,
+        two_factor_backup_codes: null
       })
       .eq('id', currentUser.id);
     return { success: true };
   },
-  
+
   /**
    * Fetches the user's profile, which includes 2FA status.
    * @param userId The ID of the user.
@@ -337,7 +337,7 @@ export const userService = {
   async regenerateBackupCodes(): Promise<RegenerateBackupCodesResponse> {
     const currentUser = await authService.getCurrentUser();
     if (!currentUser) throw new Error('User not authenticated.');
-    
+
     // const { data, error } = await supabase.functions.invoke('regenerate-backup-codes');
     // if (error) throw error;
     // return data;

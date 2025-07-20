@@ -23,12 +23,12 @@ type TwoFactorFormData = z.infer<typeof twoFactorSchema>;
 
 export function LoginForm() {
   // useAuth hook provides login, isLoading, error, and potentially navigation/state updates
-  const { login: contextLogin, isLoading: contextIsLoading, error: contextError, setUserSession } = useAuth(); 
-  
+  const { login: contextLogin, isLoading: contextIsLoading, error: contextError, setUserSession } = useAuth();
+
   // Local state for this component
   const [isLoading, setIsLoading] = useState(false); // Combined loading state
   const [error, setError] = useState<string | null>(null); // Combined error state
-  
+
   const [requires2FAInput, setRequires2FAInput] = useState(false);
   const [userIdFor2FA, setUserIdFor2FA] = useState<string | null>(null);
   
@@ -106,7 +106,7 @@ export function LoginForm() {
       setIsLoading(false);
     }
   };
-  
+
   // Prioritize local error, then context error
   const displayError = error || contextError;
 
@@ -159,11 +159,11 @@ export function LoginForm() {
             >
               {isLoading || contextIsLoading ? <Loader className="animate-spin h-5 w-5" /> : 'تحقق'}
             </button>
-            <Button 
-              type="button" 
-              variant="link" 
+            <Button
+              type="button"
+              variant="link"
               onClick={() => {
-                setRequires2FAInput(false); 
+                setRequires2FAInput(false);
                 setUserIdFor2FA(null);
                 setError(null); // Clear 2FA error on going back
               }}

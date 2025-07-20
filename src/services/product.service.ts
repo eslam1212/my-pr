@@ -13,7 +13,7 @@ class ProductService extends BaseService {
 
   async getAll() {
     // Optional: Check for 'products:read' permission if needed
-    // await this.checkPermission('products:read'); 
+    // await this.checkPermission('products:read');
     try {
       const { data, error } = await this.db
         .from('products')
@@ -41,14 +41,14 @@ class ProductService extends BaseService {
     await this.checkPermission('products:create');
     try {
       // Ensure is_serial_tracked is explicitly boolean, defaulting to false if undefined
-      const productData = { 
+      const productData = {
         ...product,
         is_serial_tracked: product.is_serial_tracked ?? false,
         barcode: product.barcode || null, // Ensure barcode is null if empty string or undefined
         reorder_level: product.reorder_level ?? 0, // Default to 0 if not provided
         preferred_stock_level: product.preferred_stock_level ?? 0, // Default to 0 if not provided
        };
-      
+
       // Remove the unit field if it's part of the Product type but not in DB schema directly
       // (This was from previous context, assuming 'unit' might be handled differently or was a temporary field)
       // If 'unit' is a direct column in 'products' table, this delete is not needed.
@@ -131,7 +131,7 @@ class ProductService extends BaseService {
 
   async findByBarcode(barcode: string): Promise<Product | null> {
     // Optional: Check for 'products:read' permission or a more specific barcode scan permission
-    // await this.checkPermission('products:read'); 
+    // await this.checkPermission('products:read');
     try {
       if (!barcode || barcode.trim() === '') {
         return null;
@@ -150,14 +150,14 @@ class ProductService extends BaseService {
         }
         throw new AppError('خطأ أثناء البحث عن المنتج بالباركود', error.code, error.details);
       }
-      
+
       if (!data) return null;
 
       // Map min_quantity to minQuantity for frontend consistency
       return {
         ...data,
         unit: data.unit || 'piece',
-        minQuantity: data.min_quantity 
+        minQuantity: data.min_quantity
       } as Product;
 
     } catch (error) {

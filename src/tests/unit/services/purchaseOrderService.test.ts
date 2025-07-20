@@ -66,7 +66,7 @@ describe('PurchaseOrderService', () => {
   //   it('should update PO status correctly', async () => {});
   //   it('should fail for invalid status transition', async () => {}); // If business logic for this exists
   // });
-  
+
   // TODO: Test updatePurchaseOrderItem
   // describe('updatePurchaseOrderItem', () => {
   //   it('should update a PO item successfully', async () => {});

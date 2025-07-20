@@ -97,7 +97,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
 
     fetchProducts();
     fetchSuppliers();
-    
+
     const fetchLocations = async () => {
       try {
         const locs = await storageLocationService.getAll();
@@ -128,7 +128,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
       if (item.is_serial_tracked) {
         const serialsRaw = item.serials_input || '';
         const parsedSerials = serialsRaw.split(/[\n\s,]+/).map(s => s.trim()).filter(s => s);
-        
+
         if (parsedSerials.length !== item.quantity) {
           toast({
             title: "خطأ في البيانات",
@@ -151,7 +151,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
       }
       return { ...item, serial_numbers_to_register: [] };
     });
-    
+
     const finalData = { ...data, items: processedItems };
 
     try {
@@ -165,24 +165,24 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
         tax_amount: 0,
         total_amount: item.quantity * item.unit_price,
         // Pass serial numbers for backend processing
-        serial_numbers_to_register: item.serial_numbers_to_register, 
+        serial_numbers_to_register: item.serial_numbers_to_register,
       }));
 
       const purchaseInputData = {
         invoice_number: `PUR-${Date.now()}`, // Consider a better way to generate this
         type: 'purchase' as const, // This might be part of a general Invoice type in backend
         date: finalData.invoice_date,
-        subtotal: totalAmount, 
+        subtotal: totalAmount,
         tax_amount: 0,
         discount_amount: 0,
         total_amount: totalAmount,
         paid_amount: paymentMethod === 'cash' || paymentMethod === 'partial' ? (finalData.paid_amount || 0) : 0,
         status: (paymentMethod === 'cash' && (finalData.paid_amount || 0) >= totalAmount ? 'paid' : 'pending') as InvoiceStatus,
-        supplier_id: null as number | string | null, 
+        supplier_id: null as number | string | null,
         notes: finalData.notes || '',
         items: purchasePayloadItems,
         // Add location_id to the main purchase data for the conceptual purchaseService
-        location_id: finalData.location_id, 
+        location_id: finalData.location_id,
       };
       
       if (finalData.contact_type === 'new') {
@@ -201,7 +201,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
       
       // console.log("Submitting to purchaseService.create:", purchaseInputData);
       // await purchaseService.create(purchaseInputData as any); // Cast as any if type is complex
-      
+
       // Mocking successful submission for now
       await new Promise(resolve => setTimeout(resolve, 500));
       toast({title: "نجاح", description: "تم إنشاء أمر الشراء (محاكاة). الأرقام التسلسلية جاهزة للمعالجة."});
@@ -218,17 +218,17 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   };
 
   const handleAddProduct = () => {
-    const newItem: FormPurchaseItem = { 
-        product_id: '', 
-        quantity: 1, 
-        unit_price: 0, 
-        is_serial_tracked: false, 
-        serials_input: '', 
-        serial_numbers_to_register: [] 
+    const newItem: FormPurchaseItem = {
+        product_id: '',
+        quantity: 1,
+        unit_price: 0,
+        is_serial_tracked: false,
+        serials_input: '',
+        serial_numbers_to_register: []
     };
     // Use useFieldArray's append method for react-hook-form v7+
     // For older versions or direct setValue:
-    setValue('items', [...items, newItem]); 
+    setValue('items', [...items, newItem]);
   };
 
   const handleRemoveProduct = (index: number) => {
@@ -249,7 +249,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
       setValue(`items.${index}.serial_numbers_to_register`, []); // Clear parsed serials
     }
   };
-  
+
   // Function to parse and validate serials for an item, can be called on blur or before submission
   const validateItemSerials = (index: number) => {
     const item = watch(`items.${index}`) as FormPurchaseItem; // Get current item data
@@ -260,7 +260,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
 
     const serialsRaw = item.serials_input || '';
     const parsedSerials = serialsRaw.split(/[\n\s,]+/).map(s => s.trim()).filter(s => s);
-    
+
     if (parsedSerials.length !== item.quantity) {
       toast({
         title: "خطأ في الإدخال",
@@ -295,7 +295,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-4 md:p-6 bg-white shadow rounded-lg" dir="rtl">
       <h2 className="text-xl font-semibold text-gray-800 border-b pb-3">إنشاء أمر شراء جديد</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label htmlFor="contact_type_supplier">نوع المورد</Label>
@@ -354,7 +354,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
           </div>
         )}
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label htmlFor="location_id">موقع الاستلام</Label>
@@ -484,7 +484,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
               )}
             </div>
           </div>
-          
+
           {/* Conditional Serial Number Input */}
           {watch(`items.${index}.is_serial_tracked`) && (
             <div>
@@ -503,7 +503,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({ onSuccess }) => {
               {errors.items?.[index]?.serial_numbers_to_register ? (
                 <p className="mt-1 text-sm text-red-600">{errors.items[index]!.serial_numbers_to_register!.message}</p>
               ) : (
-                watch(`items.${index}.serial_numbers_to_register`) && 
+                watch(`items.${index}.serial_numbers_to_register`) &&
                 watch(`items.${index}.serial_numbers_to_register`)!.length !== watch(`items.${index}.quantity`) &&
                 watch(`items.${index}.quantity`) > 0 && // Only show if quantity is set
                 <p className="mt-1 text-sm text-yellow-600">

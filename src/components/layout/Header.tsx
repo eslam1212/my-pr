@@ -20,15 +20,15 @@ export function Header({ isSidebarOpen, onToggleSidebar }: HeaderProps) {
           <div className="flex items-center">
             <button 
               onClick={onToggleSidebar}
-              className="p-2 rounded-md text-gray-600 lg:hidden hover:bg-gray-100"
+              className="p-2 rounded-md text-gray-600 lg:hidden hover:bg-slate-100 mr-2"
             >
               <Menu className="h-6 w-6" />
             </button>
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mr-2 md:mr-0">لوحة التحكم</h2>
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800 md:mr-0">لوحة التحكم</h2>
           </div>
           
           <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-full hover:bg-gray-100 relative">
+            <button className="p-2 rounded-full hover:bg-slate-100 relative">
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 transform translate-x-1/2 -translate-y-1/2"></span>
             </button>
@@ -38,7 +38,7 @@ export function Header({ isSidebarOpen, onToggleSidebar }: HeaderProps) {
                 <p className="text-sm font-medium text-gray-700">{user?.username}</p>
                 <p className="text-xs text-gray-500">{user?.role === 'admin' ? 'مدير النظام' : user?.role === 'accountant' ? 'محاسب' : 'مستخدم'}</p>
               </div>
-              <button className="p-2 rounded-full hover:bg-gray-100">
+              <button className="p-2 rounded-full hover:bg-slate-100">
                 <User className="w-5 h-5 text-gray-600" />
               </button>
               <LogoutButton />

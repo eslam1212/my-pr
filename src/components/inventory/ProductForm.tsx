@@ -8,15 +8,19 @@ import { X } from 'lucide-react';
 const productSchema = z.object({
   name: z.string().min(3, 'اسم المنتج يجب أن يكون 3 أحرف على الأقل'),
   sku: z.string().min(3, 'رمز المنتج يجب أن يكون 3 أحرف على الأقل'),
-  price: z.number().min(0, 'السعر يجب أن يكون أكبر من صفر'),
-  cost: z.number().min(0, 'التكلفة يجب أن تكون أكبر من صفر'),
-  quantity: z.number().min(0, 'الكمية يجب أن تكون أكبر من صفر'),
-  minQuantity: z.number().min(0, 'الحد الأدنى للكمية يجب أن يكون أكبر من صفر'),
+  price: z.number().min(0, 'السعر يجب أن يكون أكبر من أو يساوي صفر'), // Adjusted min to 0
+  cost: z.number().min(0, 'التكلفة يجب أن تكون أكبر من أو تساوي صفر'), // Adjusted min to 0
+  quantity: z.number().min(0, 'الكمية يجب أن تكون أكبر من أو تساوي صفر'), // Adjusted min to 0
+  minQuantity: z.number().min(0, 'الحد الأدنى للكمية يجب أن يكون أكبر من أو يساوي صفر'), // Adjusted min to 0
   unit: z.enum(['piece', 'kilogram', 'box', 'ton', 'sack'] as const),
   description: z.string().optional(),
+  barcode: z.string().optional(),
+  is_serial_tracked: z.boolean().default(false).optional(),
+  reorder_level: z.number().min(0, 'حد إعادة الطلب يجب أن يكون أكبر من أو يساوي صفر').optional().default(0),
+  preferred_stock_level: z.number().min(0, 'مستوى المخزون المفضل يجب أن يكون أكبر من أو يساوي صفر').optional().default(0),
 });
 
-type ProductFormData = z.infer<typeof productSchema>;
+export type ProductFormData = z.infer<typeof productSchema>;
 
 const unitLabels = {
   piece: 'قطعة',
@@ -40,31 +44,69 @@ export function ProductForm({ onSubmit, onClose, initialData }: ProductFormProps
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: initialData || {
-      unit: 'piece',
-    },
+    defaultValues: initialData ?
+      {
+        ...initialData,
+        is_serial_tracked: initialData.is_serial_tracked ?? false,
+        reorder_level: initialData.reorder_level ?? 0,
+        preferred_stock_level: initialData.preferred_stock_level ?? 0,
+      } :
+      {
+        unit: 'piece',
+        is_serial_tracked: false,
+        quantity: 0,
+        price: 0,
+        cost: 0,
+        minQuantity: 0,
+        reorder_level: 0,
+        preferred_stock_level: 0,
+      },
   });
+
+  const { getValues } = useForm<ProductFormData>(); // Added getValues
 
   // تعيين القيم الأولية إذا كان هناك بيانات أولية (للتعديل)
   useEffect(() => {
     if (initialData) {
-      reset(initialData);
+      const currentData = getValues();
+      reset({
+        ...currentData, // Preserve existing form state if any fields are not in initialData
+        ...initialData,
+        is_serial_tracked: initialData.is_serial_tracked ?? false, // Ensure boolean
+      });
+    } else {
+      reset({
+        name: '',
+        sku: '',
+        price: 0,
+        cost: 0,
+        quantity: 0,
+        minQuantity: 0,
+        unit: 'piece',
+        description: '',
+        barcode: '',
+        is_serial_tracked: false,
+        reorder_level: 0,
+        preferred_stock_level: 0,
+      });
     }
-  }, [initialData, reset]);
+  }, [initialData, reset, getValues]);
 
   const handleFormSubmit = (data: ProductFormData) => {
-    console.log('Form data being submitted:', data); // تحقق من البيانات المرسلة
+    console.log('Form data being submitted:', data);
     
-    // Convert camelCase to snake_case for database compatibility
     const formattedData = {
       ...data,
-      min_quantity: data.minQuantity,
+      min_quantity: data.minQuantity, // Ensure snake_case for backend
+      is_serial_tracked: data.is_serial_tracked ?? false, // Ensure boolean
+      barcode: data.barcode || null, // Send null if barcode is empty
+      reorder_level: data.reorder_level ?? 0,
+      preferred_stock_level: data.preferred_stock_level ?? 0,
     };
     
-    // Remove the camelCase property
-    delete (formattedData as any).minQuantity;
+    delete (formattedData as any).minQuantity; // Remove camelCase if not needed by Product type directly
     
-    onSubmit(formattedData as any);
+    onSubmit(formattedData as any); // Cast as any if Product type expects min_quantity
   };
 
   return (
@@ -166,6 +208,55 @@ export function ProductForm({ onSubmit, onClose, initialData }: ProductFormProps
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">الباركود</label>
+            <input
+              {...register('barcode')}
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              placeholder="أدخل رمز الباركود (اختياري)"
+            />
+            {errors.barcode && <p className="mt-1 text-sm text-red-600">{errors.barcode.message}</p>}
+          </div>
+
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <input
+              {...register('is_serial_tracked')}
+              type="checkbox"
+              id="is_serial_tracked"
+              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <label htmlFor="is_serial_tracked" className="text-sm font-medium text-gray-700">
+              تتبع المنتج بالرقم التسلسلي؟
+            </label>
+          </div>
+          {errors.is_serial_tracked && <p className="mt-1 text-sm text-red-600">{errors.is_serial_tracked.message}</p>}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">حد إعادة الطلب (عام)</label>
+              <input
+                {...register('reorder_level', { valueAsNumber: true })}
+                type="number"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="مثال: 10"
+              />
+              {errors.reorder_level && <p className="mt-1 text-sm text-red-600">{errors.reorder_level.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">مستوى المخزون المفضل (عام)</label>
+              <input
+                {...register('preferred_stock_level', { valueAsNumber: true })}
+                type="number"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="مثال: 50"
+              />
+              {errors.preferred_stock_level && <p className="mt-1 text-sm text-red-600">{errors.preferred_stock_level.message}</p>}
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 space-x-reverse">

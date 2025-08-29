@@ -1,29 +1,34 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react'; // Added useCallback, useRef
 import { AuthUser, LoginCredentials, AuthState } from '../types/auth';
 import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { authService } from '../services/authService'; // For local logout
+
+const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>; // This might need to be updated for 2FA flow
   logout: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
+  // setUserSession: (session: Session) => void; // If LoginForm needs to directly set session
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>(() => {
-    // التحقق من وجود بيانات المستخدم في التخزين المحلي عند التحميل الأولي
     const storedUser = localStorage.getItem('user');
     return {
       user: storedUser ? JSON.parse(storedUser) : null,
       isAuthenticated: !!storedUser,
-      isLoading: true, // نبدأ بالتحميل لنتحقق من الجلسة
+      isLoading: true,
       error: null,
     };
   });
 
-  const setAuthState = (session: Session | null) => {
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const setAuthState = useCallback((session: Session | null) => {
     if (session) {
       // تحويل بيانات المستخدم من Supabase إلى الصيغة المطلوبة
       const user: AuthUser = {
@@ -179,12 +184,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (event === 'SIGNED_IN' && session) {
           setAuthState(session);
+          resetIdleTimer(); // Reset idle timer on sign-in
         } else if (event === 'SIGNED_OUT') {
           setAuthState(null);
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          setAuthState(session);
+          clearIdleTimer(); // Clear idle timer on sign-out
+        } else if (event === 'TOKEN_REFRESHED') {
+          if (session) {
+            setAuthState(session);
+            resetIdleTimer(); // Reset idle timer on token refresh
+          } else {
+            // If token refresh results in null session, it means refresh failed (e.g. refresh token expired)
+            console.log('Token refresh failed, signing out.');
+            setAuthState(null); // This will trigger redirect via effect or protected routes
+            clearIdleTimer();
+          }
         } else if (event === 'USER_UPDATED' && session) {
-          setAuthState(session);
+          setAuthState(session); // User profile updated, session might be the same or new
+          resetIdleTimer();
+        } else if (event === 'PASSWORD_RECOVERY') {
+            // Handle password recovery state if needed (e.g. redirect to reset password page)
+            clearIdleTimer(); // User is effectively logged out until password reset
+        } else if (event === 'USER_DELETED') {
+            setAuthState(null);
+            clearIdleTimer();
         }
       }
     );
@@ -197,37 +219,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           console.error('Error fetching session:', error);
           setAuthState(null);
+          clearIdleTimer();
           return;
         }
         
         if (session) {
           console.log('Active session found during initialization');
-          
-          // Check if token needs refresh
           const expiresAt = session.expires_at || 0;
           const now = Math.floor(Date.now() / 1000);
           const timeLeft = expiresAt - now;
           
           if (timeLeft < 300) { // Less than 5 minutes left
             console.log('Token expiring soon, refreshing...');
-            await refreshSession();
+            await refreshSession(); // refreshSession itself calls setAuthState and resets idle timer
           } else {
             setAuthState(session);
+            resetIdleTimer();
           }
         } else {
-          // لا توجد جلسة نشطة
           setAuthState(null);
+          clearIdleTimer();
         }
       } catch (error) {
         console.error('Error checking session:', error);
         setAuthState(null);
+        clearIdleTimer();
       }
     };
     
     checkCurrentSession();
-  }, []);
+
+    // Cleanup subscription on component unmount
+    return () => {
+      subscription?.unsubscribe();
+      clearIdleTimer();
+    };
+  }, [setAuthState, refreshSession]); // Added refreshSession to dependencies
+
+  // --- Idle Timeout Logic ---
+  const handleIdleLogout = useCallback(async () => {
+    console.log("User idle, logging out...");
+    toast({ // Assuming toast is available or can be passed/imported
+      title: "تم تسجيل الخروج",
+      description: "تم تسجيل خروجك بسبب عدم النشاط.",
+      variant: "info",
+    });
+    await authService.logout(); // Use the local logout from authService
+    setAuthState(null); // Ensure state is cleared
+    // The onAuthStateChange for SIGNED_OUT should also handle clearing state and redirecting.
+  }, [setAuthState, toast]); // Added toast
+
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    idleTimerRef.current = setTimeout(handleIdleLogout, IDLE_TIMEOUT_DURATION);
+    // console.log_once('Idle timer reset.');
+  }, [handleIdleLogout]);
+
+  const clearIdleTimer = () => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      // console.log_once('Idle timer cleared.');
+    }
+  };
+
+  useEffect(() => {
+    // Only set up idle timer if user is authenticated
+    if (state.isAuthenticated) {
+      const events: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'];
+      events.forEach(event => window.addEventListener(event, resetIdleTimer));
+      resetIdleTimer(); // Start the timer when user becomes authenticated
+
+      return () => {
+        events.forEach(event => window.removeEventListener(event, resetIdleTimer));
+        clearIdleTimer();
+      };
+    } else {
+      clearIdleTimer(); // Clear timer if not authenticated
+    }
+  }, [state.isAuthenticated, resetIdleTimer]);
+  // --- End Idle Timeout Logic ---
+
 
   const login = async (credentials: LoginCredentials) => {
+    // This login function is now primarily for the initial password login.
+    // The 2FA step is handled by LoginForm directly calling authService methods.
+    // If login is successful (with or without 2FA), onAuthStateChange will update the state.
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -262,25 +340,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Clear stored tokens first to prevent any race conditions
       localStorage.removeItem('user');
-      localStorage.removeItem('supabase_access_token');
-      localStorage.removeItem('supabase-auth-token');
-      localStorage.removeItem('auth_debug_info');
+      localStorage.removeItem('supabase_access_token'); // This might be set by older versions or manual steps
+      localStorage.removeItem('supabase-auth-token'); // Supabase's default key
+      localStorage.removeItem('auth_debug_info'); // Custom debug info
       
-      const { error } = await supabase.auth.signOut({ 
-        scope: 'global' // Sign out from all tabs/windows
-      });
-      
-      if (error) {
-        throw error;
+      // Use the authService.logout which might have more comprehensive logic
+      // (though current authService.logout is simple supabase.auth.signOut())
+      // The key is that onAuthStateChange will pick up the SIGNED_OUT event.
+      await authService.logout();
+      // setAuthState(null) will be called by onAuthStateChange.
+      // Redirecting here might be premature if onAuthStateChange handles it.
+      // However, explicit redirect ensures timely navigation.
+      if (window.location.pathname !== '/login') {
+         window.location.href = '/login'; // Redirect if not already on login page
       }
-      
-      // Final cleanup
-      setAuthState(null);
-      
-      // Force reload to clear any in-memory state
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Error signing out:', error);
+    } catch (error) { // Renamed err to error for consistency
+      console.error('Error signing out from AuthContext:', error);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -289,9 +364,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // This function can be used by LoginForm after successful 2FA to update context if needed,
+  // though onAuthStateChange should ideally handle it.
+  // const setUserSession = (session: Session) => {
+  //   setAuthState(session);
+  // };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, refreshSession }}>
+    <AuthContext.Provider value={{ ...state, login, logout, refreshSession /*, setUserSession */ }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
+// Helper for toast (or import from a central place if it exists)
+const toast = ({ title, description, variant }: { title: string, description: string, variant?: string }) => {
+  console.log(`Toast: ${title} - ${description} (Variant: ${variant || 'default'})`);
+  // In a real app, this would call the actual toast function from a library like react-toastify or shadcn/ui.
+  // For example, if using shadcn/ui's useToast:
+  // const { toast: actualToast } = useToast();
+  // actualToast({ title, description, variant });
+};

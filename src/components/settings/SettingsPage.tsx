@@ -5,14 +5,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useSettingsStore } from '@/store/settingsStore';
-import { Settings, Globe, Palette, CreditCard, CalendarDays, Save, Loader2, Check } from 'lucide-react';
+import { Settings, Globe, Palette, CreditCard, CalendarDays, Save, Loader2, Check, Shield } from 'lucide-react'; // Added Shield
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from '@/lib/supabase';
+import TwoFactorAuthSettings from './TwoFactorAuthSettings'; // Import 2FA settings component
+import { useEffect } from 'react'; // Added useEffect for fetching userId
 
 export function SettingsPage() {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("interface");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   const {
     direction,
@@ -34,12 +37,12 @@ export function SettingsPage() {
     try {
       setIsSaving(true);
       
-      // Get current user
-      const { data } = await supabase.auth.getSession();
-      const userId = data.session?.user.id || 'anonymous';
+      const userIdToSave = currentUserId || 'anonymous';
       
-      // Set user ID in store
-      setUserId(userId);
+      // Set user ID in store if not already set by initial fetch
+      if (useSettingsStore.getState().userId !== userIdToSave) {
+        setUserId(userIdToSave);
+      }
       
       // Sync settings to database
       await syncSettings();
@@ -91,8 +94,54 @@ export function SettingsPage() {
         </Button>
       </div>
 
+useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        // Initialize userId in store if not already set
+        if (!useSettingsStore.getState().userId) {
+            setUserId(session.user.id);
+        }
+      } else {
+        // Handle case where user is not logged in or session is unavailable
+        // This page should ideally be protected by an auth guard.
+        console.warn("User not authenticated, cannot load settings or 2FA.");
+        toast({ title: "خطأ", description: "يجب تسجيل الدخول لعرض الإعدادات.", variant: "destructive"});
+      }
+    };
+    fetchUser();
+  }, [setUserId, toast]);
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold">إعدادات النظام</h1>
+          <p className="text-muted-foreground mt-1">قم بتخصيص إعدادات النظام حسب تفضيلاتك</p>
+        </div>
+        <Button
+          onClick={handleSave}
+          size="lg"
+          className="gap-2 w-full sm:w-auto"
+          disabled={isSaving || !currentUserId} // Disable save if no user or saving
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              جاري الحفظ...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              حفظ الإعدادات
+            </>
+          )}
+        </Button>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6"> {/* Adjusted grid columns */}
           <TabsTrigger value="interface" className="gap-2">
             <Globe className="w-4 h-4" />
             <span className="hidden sm:inline">الواجهة</span>
@@ -108,6 +157,10 @@ export function SettingsPage() {
           <TabsTrigger value="date" className="gap-2">
             <CalendarDays className="w-4 h-4" />
             <span className="hidden sm:inline">التاريخ</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2"> {/* New Security Tab */}
+            <Shield className="w-4 h-4" />
+            <span className="hidden sm:inline">الأمان</span>
           </TabsTrigger>
         </TabsList>
 
@@ -263,6 +316,21 @@ export function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          {currentUserId ? (
+            <TwoFactorAuthSettings userId={currentUserId} />
+          ) : (
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle>تحميل إعدادات الأمان...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>يجب أن تكون مسجلاً للدخول لإدارة إعدادات الأمان.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
